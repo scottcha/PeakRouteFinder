@@ -13,6 +13,10 @@ namespace PeakRouteFinder
         public double? lat { get; set; }
         public double? lon { get; set; }
 
+        public override string ToString()
+        {
+            return(String.Format("{0}, {1}, {2}", name, lat, lon));
+        }
         public GeoCoordinate geoCoordinate
         {
             get
