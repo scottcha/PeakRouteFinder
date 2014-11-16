@@ -11,16 +11,15 @@ namespace PeakRouteFinder
     {
         public List<List<double>> distanceLookup { get; set; }
         public List<Peak> peaks { get; set; }
-        public List<List<Peak>> solutions { get; set; }
         int maxDistance = 70; 
         long progressCounter = 0;
-        public Stack<Peak> visited { get; set; }
         static void Main(string[] args)
         {
             var fileName = args[0];
 
             var p = new Program();
             p.FindRoutes(fileName);
+            Console.ReadLine();
         }
 
         private void ReadPeaksFromFile(string fileName)
@@ -43,48 +42,57 @@ namespace PeakRouteFinder
 
         public void FindRoutes(string fileName)
         {
+            var sw = Stopwatch.StartNew();
             peaks = new List<Peak>();
-            visited = new Stack<Peak>();
-            solutions = new List<List<Peak>>();
             ReadPeaksFromFile(fileName);
             InitializeDistanceLookup(peaks);
+            const bool forceNonParallel = false;
+            var options = new ParallelOptions { MaxDegreeOfParallelism = forceNonParallel ? 1 : -1 };
             //PrintPeakDistances(peaks);
-            for (int count = 0; count < peaks.Count; count++)
+            Parallel.ForEach(peaks, options, currentPeak =>
             {
-                Console.WriteLine("\n" + count + " Working on peak " + peaks[count].name);
+                var swPeak = Stopwatch.StartNew();
+                List<List<Peak>> solutions = new List<List<Peak>>();
+                Stack<Peak> visited = new Stack<Peak>();
+                Console.WriteLine("\n Working on peak {0} and thread {1}", currentPeak.name, System.Threading.Thread.CurrentThread.ManagedThreadId);
                 progressCounter = 0;
-                FindRoutesForPeak(peaks[count], maxDistance);
+                FindRoutesForPeak(currentPeak, maxDistance, visited, solutions);
                 solutions.Sort(CompareListsByLength);
                 //purge all but the best solution for this peak
                 int lengthOfBestCurrentSolution = solutions[0].Count;
                 for (int solutionCount = 0; solutionCount < solutions.Count; solutionCount++)
                 {
-                    if(solutions[solutionCount].Count < lengthOfBestCurrentSolution)
+                    if (solutions[solutionCount].Count < lengthOfBestCurrentSolution)
                     {
                         solutions.RemoveAt(solutionCount);
                     }
                 }
-                visited.Clear();
-            }
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter("Solutions.csv"))
-            {
-                int solutionCount = 1;
-                foreach(var solution in solutions)
+
+                visited = null;
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(currentPeak.name + "Solutions.csv"))
                 {
-                    for(int peakCount = 0; peakCount < solution.Count; peakCount++)
+                    int solutionCount = 1;
+                    foreach(var solution in solutions)
                     {
-                        if(peakCount < solution.Count-1)
+                        for(int peakCount = 0; peakCount < solution.Count; peakCount++)
                         {
-                            file.WriteLine(solutionCount + ", " + solution[peakCount].ToString() + ", " +  CalculateDistance(solution[peakCount], solution[peakCount + 1]));
+                            if(peakCount < solution.Count-1)
+                            {
+                                file.WriteLine(currentPeak.name + ", " + solutionCount + ", " + solution[peakCount].ToString() + ", " +  CalculateDistance(solution[peakCount], solution[peakCount + 1]));
+                            }
+                            else
+                            {
+                                file.WriteLine(currentPeak.name + ", " + solutionCount + ", " + solution[peakCount].ToString()); 
+                            }
                         }
-                        else
-                        {
-                            file.WriteLine(solutionCount + ", " + solution[peakCount].ToString()); 
-                        }
+                        solutionCount++;
                     }
-                    solutionCount++;
                 }
-            }
+                swPeak.Stop();
+                Console.WriteLine("Finished peak {0} in {1}", currentPeak.name, swPeak.Elapsed.TotalMinutes);
+            });
+            sw.Stop();
+            Console.WriteLine("Finished all peaks in " + sw.Elapsed.TotalMinutes);
         }
 
         private static int CompareListsByLength(List<Peak> a, List<Peak> b)
@@ -162,9 +170,9 @@ namespace PeakRouteFinder
             }
         }
 
-        public void FindRoutesForPeak(Peak p, double distance)
+        public void FindRoutesForPeak(Peak p, double distance, Stack<Peak> visited, List<List<Peak>> solutions)
         {
-            if (progressCounter++ % 100000 == 0)
+            if (progressCounter++ % 1000000 == 0)
             {
                 Console.Write(".");
             }
@@ -192,7 +200,7 @@ namespace PeakRouteFinder
 
             foreach (Peak next in nextPeaks)
             {
-                FindRoutesForPeak(next, distance - CalculateDistance(p, next));
+                FindRoutesForPeak(next, distance - CalculateDistance(p, next), visited, solutions);
             }
             visited.Pop();
             nextPeaks = null;
