@@ -19,7 +19,12 @@ class DistanceProvider(Protocol):
 
 def validate_coordinates(point: Peak) -> None:
     """Reject coordinates outside the valid latitude and longitude ranges."""
-    if abs(point.lat) > 90 or abs(point.lon) > 180:
+    if (
+        not math.isfinite(point.lat)
+        or not math.isfinite(point.lon)
+        or abs(point.lat) > 90
+        or abs(point.lon) > 180
+    ):
         raise ValueError(
             f"invalid coordinates for {point.name}: "
             f"latitude={point.lat}, longitude={point.lon}"

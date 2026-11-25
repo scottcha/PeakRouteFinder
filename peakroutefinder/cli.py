@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import math
 import sys
 from collections import Counter
 from collections.abc import Sequence
@@ -81,6 +82,8 @@ def _nonnegative_float(value: str) -> float:
         number = float(value)
     except ValueError as error:
         raise argparse.ArgumentTypeError("expected a number") from error
+    if not math.isfinite(number):
+        raise argparse.ArgumentTypeError("must be finite")
     if number < 0:
         raise argparse.ArgumentTypeError("must be non-negative")
     return number

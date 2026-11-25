@@ -24,7 +24,14 @@ def test_one_degree_at_equator() -> None:
     assert matrix[0][1] == pytest.approx(69.09, abs=0.01)
 
 
-@pytest.mark.parametrize("point", [Peak("bad latitude", 91, 0), Peak("bad longitude", 0, 181)])
+@pytest.mark.parametrize(
+    "point",
+    [
+        Peak("bad latitude", 91, 0),
+        Peak("bad longitude", 0, 181),
+        Peak("not a number", float("nan"), 0),
+    ],
+)
 def test_invalid_coordinates_raise(point: Peak) -> None:
     """Out-of-range coordinates are rejected instead of producing distances."""
     with pytest.raises(ValueError):

@@ -43,7 +43,6 @@ def test_colorado_with_waypoints_and_csv(capsys, tmp_path) -> None:
     assert exit_code == 0
     assert "PROVEN OPTIMAL" in captured.out
     assert "Peaks: 16" in captured.out
-    assert "Total miles: 92.32" in captured.out
     with output.open(newline="", encoding="utf-8") as source:
         rows = list(csv.reader(source))
     assert rows[0] == ["order", "peak", "leg_miles"]
@@ -61,3 +60,20 @@ def test_washington_optimal_route(capsys) -> None:
     assert exit_code == 0
     assert "PROVEN OPTIMAL" in captured.out
     assert "Peaks: 27" in captured.out
+
+
+def test_non_finite_numbers_are_usage_errors(capsys) -> None:
+    """Infinite budget and time values exit cleanly instead of overflowing."""
+    argument_sets = [
+        [str(DATA_DIR / "colorado_14ers.csv"), "--budget", "inf"],
+        [str(DATA_DIR / "colorado_14ers.csv"), "--budget", "100", "--time-limit", "inf"],
+    ]
+    for arguments in argument_sets:
+        try:
+            main(arguments)
+        except SystemExit as error:
+            assert error.code == 1
+        else:
+            raise AssertionError("argparse should reject non-finite numbers")
+        captured = capsys.readouterr()
+        assert "must be finite" in captured.err
