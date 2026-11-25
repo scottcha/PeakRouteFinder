@@ -62,6 +62,10 @@ Valhalla returned geometry for every requested leg. No leg failed, but many retu
 
 The Sherman variant uses Sherman, Elbert, La Plata, Huron, Missouri, Belford, Oxford, Harvard, Columbia, Yale, Princeton, Antero, Tabeguache, and Shavano. It excludes trailhead approaches because its reference trailheads were not supplied.
 
+![Valhalla routes compared with the reference GPX](comparison.png)
+
+Red is the 100.82-mile reference GPX; blue shows the 166.92-mile standard and 166.39-mile Sherman-variant Valhalla routes.
+
 ### Standard-route legs
 
 | Leg | Valhalla | GPX | Difference |
