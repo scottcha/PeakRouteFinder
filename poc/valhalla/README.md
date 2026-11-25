@@ -129,3 +129,35 @@ These connectors are included in Valhalla's reported distance. On the checked Co
 **Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using the stock matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route. The GPX-backed hybrid reduces the gap to 3.19 miles, but it is anchored to one known line. The direct and DEM hybrids remove that runtime dependency; the DEM version produces actual terrain-path geometry and 91.07 path miles, but neither establishes a general trail-distance provider.
 
 The next POC should map-match the reference GPX with `trace_attributes`, evaluate DEM routing against additional independent GPX tracks, and add explicit slope or land-cover safety constraints. DEM resolution and hiking-cost calibration remain error sources. Until then, do not integrate any hybrid matrix into the general optimizer or label its output trail-optimal.
+
+## All-peak hybrid optimization
+
+With the local Valhalla service running, optimize the full Colorado list through the existing CP-SAT engine:
+
+```bash
+python -m peakroutefinder.poc.optimize \
+  --budget 100 \
+  --output-dir /tmp/peakroutefinder-valhalla/optimize-100
+```
+
+The provider queries Valhalla for pairs within 100 straight-line miles and evaluates directed DEM alternatives for pairs within 15 miles. Farther pairs retain haversine, and unavailable Valhalla pairs receive the router's 124.27-mile over-limit lower bound; neither can create a false route within a 100-mile budget. Each arc selects the lower of actual Valhalla and DEM path miles, not hiking-effort miles. DEM coverage beyond 15 miles is not evaluated, so optimality applies to this bounded hybrid matrix rather than every possible terrain path.
+
+`matrix.json` caches each DEM candidate and supports resuming an interrupted run. `result.json` records the solver status, peak bound, route, mileage, and selected leg geometry.
+
+### Results
+
+All listed solves reached `OPTIMAL` in both CP-SAT phases. Mileage is the cheapest route at the proven maximum peak count for this matrix.
+
+| Budget | Proven maximum fourteeners | Cheapest maximum-count route |
+|---:|---:|---:|
+| 90 mi | 15 | 85.25 mi |
+| 100 mi | **17** | **97.26 mi** |
+| 105 mi | 18 | 102.97 mi |
+| 110 mi | 19 | 109.13 mi |
+| 120 mi | 19 | 109.13 mi |
+
+At 100 miles, the exact upper bound is **17 peaks**: this matrix contains no 18-peak route, and therefore no route beating the haversine model's 20-peak result. The 100-mile route is Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Sherman → Democrat → Lincoln → Bross. It uses 12 DEM legs and 4 Valhalla legs. Returned geometry totals 97.267 miles versus 97.263 matrix miles, a 0.004-mile Valhalla response-rounding difference.
+
+An 18th peak becomes possible at 102.97 miles by adding Massive; a 19th becomes possible at 109.13 miles by adding Quandary. The maximum remains 19 at 120 miles. These are matrix results, not proof that no real-world terrain route exists beyond the evaluated DEM cutoff.
+
+![Exact 17-peak hybrid optimum under 100 miles](hybrid-optimal-100.png)

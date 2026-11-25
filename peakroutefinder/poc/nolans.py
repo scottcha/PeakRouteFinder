@@ -21,6 +21,9 @@ from peakroutefinder.poc.dem import (
 
 GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
+MAX_MATRIX_DISTANCE_METERS = 200_000
+MAX_MATRIX_LOCATIONS = 2500
+METERS_PER_MILE = 1609.344
 MAX_HIKING_DIFFICULTY = 6
 GPX_ALTERNATIVE_PENALTY = 1.35
 DIRECT_OFFTRAIL_FACTOR = 1.65
@@ -211,6 +214,71 @@ class ValhallaClient:
                 }
             )
         return report
+
+    def matrix(
+        self, points: Sequence[Peak], max_haversine: float | None = None
+    ) -> list[list[float]]:
+        """Return pedestrian miles, retaining haversine beyond an optional cutoff."""
+        locations = [self._location(point) for point in points]
+        distances = [
+            [
+                haversine_miles(
+                    (origin.lat, origin.lon), (destination.lat, destination.lon)
+                )
+                for destination in points
+            ]
+            for origin in points
+        ]
+        for origin_index, origin in enumerate(points):
+            target_indices = [
+                index
+                for index in range(len(points))
+                if max_haversine is None
+                or distances[origin_index][index] <= max_haversine
+            ]
+            for batch_start in range(
+                0, len(target_indices), MAX_MATRIX_LOCATIONS
+            ):
+                batch = target_indices[
+                    batch_start : batch_start + MAX_MATRIX_LOCATIONS
+                ]
+                response = self._post(
+                    "sources_to_targets",
+                    {
+                        "sources": [locations[origin_index]],
+                        "targets": [locations[index] for index in batch],
+                        "costing": "pedestrian",
+                        "costing_options": {
+                            "pedestrian": {
+                                "shortest": True,
+                                "max_hiking_difficulty": MAX_HIKING_DIFFICULTY,
+                                "max_distance": MAX_DISTANCE_METERS,
+                                "use_hills": 1,
+                            }
+                        },
+                        "units": "miles",
+                    },
+                )
+                rows = response["sources_to_targets"]
+                if len(rows) != 1 or len(rows[0]) != len(batch):
+                    raise RuntimeError("Valhalla returned an incomplete distance row")
+                for destination_index, result in zip(batch, rows[0]):
+                    distance = result["distance"]
+                    if distance is None:
+                        over_limit_miles = (
+                            MAX_MATRIX_DISTANCE_METERS / METERS_PER_MILE
+                        )
+                        if (
+                            max_haversine is None
+                            or max_haversine > over_limit_miles
+                        ):
+                            raise RuntimeError(
+                                f"Valhalla has no route from {origin.name} "
+                                f"to {points[destination_index].name}"
+                            )
+                        distance = over_limit_miles
+                    distances[origin_index][destination_index] = float(distance)
+        return distances
 
     def route(self, origin: Peak, destination: Peak) -> dict:
         """Return one shortest-distance pedestrian leg and decoded geometry."""
