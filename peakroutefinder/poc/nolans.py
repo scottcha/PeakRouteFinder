@@ -4,16 +4,21 @@ import argparse
 import csv
 import hashlib
 import json
-import math
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Sequence
 
+from peakroutefinder.distance import haversine_miles
 from peakroutefinder.model import Peak
+from peakroutefinder.poc.dem import (
+    GRID_STRIDE,
+    TERRARIUM_URL,
+    DemRouter,
+    TerrariumProvider,
+)
 
-EARTH_RADIUS_MILES = 3958.7613
 GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
 MAX_HIKING_DIFFICULTY = 6
@@ -53,17 +58,6 @@ SHERMAN_VARIANT_NAMES = (
 )
 
 Coordinate = tuple[float, float]
-
-
-def haversine_miles(origin: Coordinate, destination: Coordinate) -> float:
-    """Return great-circle miles between two latitude/longitude pairs."""
-    lat1, lon1 = (math.radians(value) for value in origin)
-    lat2, lon2 = (math.radians(value) for value in destination)
-    haversine = (
-        math.sin((lat2 - lat1) / 2) ** 2
-        + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
-    )
-    return 2 * EARTH_RADIUS_MILES * math.asin(math.sqrt(haversine))
 
 
 def decode_polyline(encoded: str, precision: int = 6) -> list[Coordinate]:
@@ -387,6 +381,70 @@ def direct_offtrail_route(
     }
 
 
+def dem_offtrail_route(
+    valhalla_route: dict, points: Sequence[Peak], dem_router: DemRouter
+) -> dict:
+    """Choose slope-aware DEM paths without using reference geometry."""
+    if len(valhalla_route["legs"]) != len(points) - 1:
+        raise ValueError("waypoints do not match the Valhalla route")
+
+    legs = []
+    for index, valhalla_leg in enumerate(valhalla_route["legs"]):
+        origin = points[index]
+        destination = points[index + 1]
+        try:
+            candidate = dem_router.route(origin, destination)
+        except RuntimeError as error:
+            legs.append(
+                {
+                    "origin": origin.name,
+                    "destination": destination.name,
+                    "status": "error",
+                    "error": str(error),
+                }
+            )
+            continue
+        use_valhalla = (
+            valhalla_leg["status"] == "ok"
+            and valhalla_leg["miles"] <= candidate["effort_miles"]
+        )
+        leg = {
+            "origin": origin.name,
+            "destination": destination.name,
+            "status": "ok",
+            "source": "valhalla" if use_valhalla else "dem-off-trail",
+            "miles": valhalla_leg["miles"] if use_valhalla else candidate["miles"],
+            "effective_miles": (
+                valhalla_leg["miles"] if use_valhalla else candidate["effort_miles"]
+            ),
+            "geometry": (
+                valhalla_leg["geometry"] if use_valhalla else candidate["geometry"]
+            ),
+            "dem_path_miles": candidate["miles"],
+            "dem_effort_miles": candidate["effort_miles"],
+            "dem_elevation_gain_feet": candidate["elevation_gain_feet"],
+            "valhalla_miles": (
+                valhalla_leg["miles"] if valhalla_leg["status"] == "ok" else None
+            ),
+        }
+        if use_valhalla:
+            leg["warnings"] = valhalla_leg["warnings"]
+        legs.append(leg)
+
+    complete = all(leg["status"] == "ok" for leg in legs)
+    return {
+        "complete": complete,
+        "total_miles": sum(leg["miles"] for leg in legs) if complete else None,
+        "effective_miles": (
+            sum(leg["effective_miles"] for leg in legs) if complete else None
+        ),
+        "dem_connector_count": sum(
+            leg.get("source") == "dem-off-trail" for leg in legs
+        ),
+        "legs": legs,
+    }
+
+
 def total_miles_label(route: dict) -> str:
     """Format a complete total without presenting partial mileage as a total."""
     if not route["complete"]:
@@ -439,6 +497,13 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--router-url", default="http://127.0.0.1:18002")
     parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument(
+        "--dem-cache",
+        type=Path,
+        default=Path("/tmp/peakroutefinder-valhalla/dem-tiles"),
+    )
+    parser.add_argument("--dem-zoom", type=int, default=12)
+    parser.add_argument("--dem-timeout", type=float, default=30.0)
     args = parser.parse_args()
 
     peaks = load_peaks(args.peaks)
@@ -471,6 +536,14 @@ def main() -> int:
         routes["direct-hybrid"]["legs"], reference_legs
     ):
         leg["reference_gpx_miles"] = reference_leg["miles"]
+    dem_router = DemRouter(
+        TerrariumProvider(args.dem_cache, args.dem_zoom, args.dem_timeout)
+    )
+    routes["dem-hybrid"] = dem_offtrail_route(
+        routes["standard"], standard_points, dem_router
+    )
+    for leg, reference_leg in zip(routes["dem-hybrid"]["legs"], reference_legs):
+        leg["reference_gpx_miles"] = reference_leg["miles"]
 
     results = {
         "configuration": {
@@ -481,6 +554,9 @@ def main() -> int:
             "max_distance_meters": MAX_DISTANCE_METERS,
             "gpx_alternative_penalty": GPX_ALTERNATIVE_PENALTY,
             "direct_offtrail_factor": DIRECT_OFFTRAIL_FACTOR,
+            "dem_source": TERRARIUM_URL,
+            "dem_zoom": args.dem_zoom,
+            "dem_grid_stride": GRID_STRIDE,
             "reference_gpx_sha256": hashlib.sha256(
                 args.reference_gpx.read_bytes()
             ).hexdigest(),
@@ -509,17 +585,23 @@ def main() -> int:
                 f" estimated (geometric {route['geometric_miles']:.2f}; "
                 f"{route['direct_connector_count']} direct connectors)"
             )
+        elif route_name == "dem-hybrid" and route["complete"]:
+            summary += (
+                f" (effort {route['effective_miles']:.2f}; "
+                f"{route['dem_connector_count']} DEM connectors)"
+            )
         print(f"{route_name}: {summary}")
         for leg in route["legs"]:
             if leg["status"] == "ok":
                 comparison = (
                     f" (GPX {leg['reference_gpx_miles']:.2f})"
-                    if route_name in {"standard", "hybrid", "direct-hybrid"}
+                    if route_name
+                    in {"standard", "hybrid", "direct-hybrid", "dem-hybrid"}
                     else ""
                 )
                 source = (
                     f" [{leg['source']}]"
-                    if route_name in {"hybrid", "direct-hybrid"}
+                    if route_name in {"hybrid", "direct-hybrid", "dem-hybrid"}
                     else ""
                 )
                 print(

@@ -22,7 +22,7 @@ curl -fL \
   -o /tmp/peakroutefinder-valhalla/nolans-fkt.gpx
 ```
 
-Run the standard, Sherman-variant, GPX-backed hybrid, and no-reference direct-hybrid sequences:
+Run the standard, Sherman-variant, GPX-backed hybrid, direct-hybrid, and DEM-aware hybrid sequences:
 
 ```bash
 .venv/bin/python -m peakroutefinder.poc.nolans \
@@ -32,10 +32,12 @@ Run the standard, Sherman-variant, GPX-backed hybrid, and no-reference direct-hy
 
 Outputs:
 
-- `results.json`: configuration, summit/trailhead snapping, leg distances, errors, connector provenance, and decoded geometry.
-- `routes.geojson`: the reference track, successful Valhalla legs, and selected hybrid legs for visual comparison.
+- `results.json`: configuration, snapping, leg distances, hiking effort, elevation gain, errors, connector provenance, and decoded geometry.
+- `routes.geojson`: the reference track, successful Valhalla legs, and selected hybrid/DEM terrain paths for visual comparison.
 
 The GPX comes from the [Fastest Known Time Nolan's route page](https://fastestknowntime.com/route/nolans-14-co). Its redistribution license is not stated, so it is downloaded rather than committed.
+
+Elevation comes from [Mapzen Terrain Tiles](https://github.com/tilezen/joerd) in Terrarium encoding, cached under `/tmp/peakroutefinder-valhalla/dem-tiles`. The DEM is routing input only; no reference GPX coordinates enter A* candidate construction.
 
 ## Frozen inputs and routing configuration
 
@@ -49,7 +51,10 @@ The GPX comes from the [Fastest Known Time Nolan's route page](https://fastestkn
 | Hiking difficulty | 6, the most permissive `sac_scale` setting; this is a coverage POC, not a safety recommendation |
 | Maximum route distance | 250,000 meters, explicitly above Valhalla's 100,000-meter default |
 | GPX alternative penalty | 1.35× for candidate selection only; actual GPX mileage is still reported |
-| Direct off-trail factor | 1.65× direct haversine miles, calibrated against the GPX per-leg median of 1.643 |
+| Direct off-trail factor | 1.65× direct haversine miles, rounded from the GPX per-leg median of 1.643 |
+| DEM | Terrarium zoom 12, 8-neighbor A*, 2-pixel stride, 48-pixel boundary padding |
+| DEM validity | Reject non-finite, below -1,000 m, or above 9,000 m tile values |
+| Off-trail effort | Tobler hiking speed converted to flat-equivalent miles at 3.1 mph |
 
 ## Results
 
@@ -62,11 +67,14 @@ Valhalla returned geometry for every requested leg. No leg failed, but many retu
 | Standard Nolan's, Blank Gulch to Fish Hatchery | 166.92 mi | 100.82 mi | +66.10 mi (+65.6%) |
 | GPX-backed hybrid, same endpoints | 104.01 mi | 100.82 mi | +3.19 mi (+3.2%) |
 | No-reference direct hybrid, same endpoints | 92.65 mi estimated | 100.82 mi | -8.17 mi (-8.1%) |
+| DEM-aware hybrid, same endpoints | 91.07 path mi | 100.82 mi | -9.75 mi (-9.7%) |
 | Sherman-to-Shavano variant, summit to summit | 166.39 mi | No matching GPX | Not compared |
 
 The hybrid selects each GPX leg when `GPX miles × 1.35 < Valhalla miles`, or when Valhalla fails. It uses **7 GPX alternatives**, retains Valhalla on 8 legs, and has **121.33 penalty-weighted miles**. Actual mileage remains the geometric distance of the selected path; the penalty affects only selection. The `gpx-alternative` source explicitly denotes whole-leg reference geometry; no segment-level off-trail classification is claimed.
 
 The no-reference direct hybrid constructs candidates only from waypoint coordinates and Valhalla results. It estimates each direct connector as `haversine miles × 1.65` and selects it when that estimate beats Valhalla, or when Valhalla fails. It uses **12 direct connectors**, retains Valhalla on Shavano-to-Tabeguache, Columbia-to-Harvard, and Oxford-to-Belford, and reports **92.65 estimated miles**. Its raw geometric total is **58.05 miles**. The GPX is used only to calibrate and score this heuristic, never to construct its candidates.
+
+The DEM-aware hybrid replaces straight candidates with A* terrain paths. Selection uses slope-aware hiking effort; reported path miles measure the selected terrain geometry, and elevation gain is exported separately. It selects **8 DEM connectors**, totals **91.07 path miles** and **130.52 effort miles**, and retains Valhalla on the other 7 legs. Harvard-to-Oxford, for example, becomes a 4.34-mile terrain path with 2,821 feet of gain and 9.34 effort miles instead of a 24.29-mile Valhalla detour. DEM failures make the route incomplete; they never trigger a straight-line fallback.
 
 The Sherman variant uses Sherman, Elbert, La Plata, Huron, Missouri, Belford, Oxford, Harvard, Columbia, Yale, Princeton, Antero, Tabeguache, and Shavano. It excludes trailhead approaches because its reference trailheads were not supplied.
 
@@ -81,6 +89,10 @@ Green is the 104.01-mile hybrid, blue is the standard Valhalla route, and red is
 ![No-reference direct hybrid compared with Valhalla and the reference GPX](direct-hybrid-comparison.png)
 
 Green is the 92.65-mile estimated direct hybrid, blue is the standard Valhalla route, and red is the reference GPX. Straight green segments are candidate connectors, not terrain-derived walking paths.
+
+![DEM-aware hybrid compared with Valhalla and the reference GPX](dem-hybrid-comparison.png)
+
+Green is the 91.07-mile DEM-aware hybrid, blue is Valhalla, and red is the reference GPX. DEM-selected green legs follow A* terrain paths rather than straight lines.
 
 ### Standard-route legs
 
@@ -114,6 +126,6 @@ These connectors are included in Valhalla's reported distance. On the checked Co
 
 ## Verdict and next step
 
-**Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using the stock matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route. The GPX-backed hybrid reduces the gap to 3.19 miles, but it is anchored to one known line. The 1.65 direct heuristic removes that runtime dependency and estimates 92.65 miles, but its straight connectors remain terrain-blind approximations rather than a general trail-distance provider.
+**Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using the stock matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route. The GPX-backed hybrid reduces the gap to 3.19 miles, but it is anchored to one known line. The direct and DEM hybrids remove that runtime dependency; the DEM version produces actual terrain-path geometry and 91.07 path miles, but neither establishes a general trail-distance provider.
 
-The next POC should map-match the reference GPX with `trace_attributes` to distinguish absent ways from ways excluded by access or difficulty tags, and use DEM sampling to replace the global direct-mileage factor with terrain-aware distances and slope rejection. Until then, do not integrate either hybrid matrix into the general optimizer or label its output trail-optimal.
+The next POC should map-match the reference GPX with `trace_attributes`, evaluate DEM routing against additional independent GPX tracks, and add explicit slope or land-cover safety constraints. DEM resolution and hiking-cost calibration remain error sources. Until then, do not integrate any hybrid matrix into the general optimizer or label its output trail-optimal.
