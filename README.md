@@ -42,10 +42,23 @@ Malformed rows, invalid coordinates, and empty files are rejected with the file 
 ```text
 python -m peakroutefinder <list.csv> --budget MILES
     [--start LAT,LON] [--end LAT,LON]
-    [--time-limit SECONDS] [--workers COUNT] [--out results.csv]
+    [--time-limit SECONDS] [--workers COUNT]
+    [--out results.csv] [--map route.html]
 ```
 
 `--time-limit` applies separately to each solve phase and defaults to 120 seconds. `--workers` defaults to the smaller of 16 and the available CPU count. `--out` writes `order,peak,leg_miles` rows and replaces an existing file.
+
+### Route maps
+
+```bash
+python -m peakroutefinder data/colorado_14ers.csv --budget 100 --map colorado-route.html
+```
+
+![Colorado 14ers optimal route with a 100-mile budget](docs/images/colorado-route.png)
+
+`--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks have name labels in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. The key lists route peaks in order and includes a collapsible list of the other listed peaks. Hover over points for names and coordinates. The route line includes waypoint legs.
+
+Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles.
 
 Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
 

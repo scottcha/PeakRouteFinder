@@ -16,6 +16,7 @@ from peakroutefinder.solver import (
     SolveStatus,
     solve,
 )
+from peakroutefinder.visualization import write_map
 
 CSV_HEADER = ["Lat", "Lon", "Name"]
 EXIT_ERROR = 1
@@ -132,6 +133,13 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"CP-SAT workers (default: {DEFAULT_WORKERS})",
     )
     parser.add_argument("--out", type=Path, help="write route legs to this CSV")
+    parser.add_argument(
+        "--map",
+        dest="map_path",
+        type=Path,
+        metavar="HTML",
+        help="write an interactive route map to this HTML file",
+    )
     return parser
 
 
@@ -205,12 +213,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if report.route is not None:
         labels, legs = _print_route(report.route)
-        if args.out is not None:
-            try:
+        try:
+            if args.out is not None:
                 _write_csv(args.out, labels, legs)
-            except OSError as error:
-                print(f"error: {error}", file=sys.stderr)
-                return EXIT_ERROR
+            if args.map_path is not None:
+                write_map(args.map_path, peaks, report.route)
+        except OSError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return EXIT_ERROR
 
     if report.status == SolveStatus.TIMEOUT:
         found = report.route.peak_count if report.route is not None else 0
