@@ -117,7 +117,7 @@ def path_miles(points: Sequence[Coordinate]) -> float:
     return sum(haversine_miles(a, b) for a, b in zip(points, points[1:]))
 
 
-def reference_leg_miles(
+def split_reference_legs(
     reference: Sequence[Coordinate], points: Sequence[Peak]
 ) -> list[dict]:
     """Split a reference track into mileage and geometry between waypoints."""
@@ -396,7 +396,7 @@ def main() -> int:
         "standard": route_sequence(client, standard_points),
         "sherman-variant": route_sequence(client, variant_points),
     }
-    reference_legs = reference_leg_miles(reference, standard_points)
+    reference_legs = split_reference_legs(reference, standard_points)
     for leg, reference_leg in zip(routes["standard"]["legs"], reference_legs):
         leg["reference_gpx_miles"] = reference_leg["miles"]
         if leg["status"] == "ok":

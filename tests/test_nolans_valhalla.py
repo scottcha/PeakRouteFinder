@@ -3,7 +3,7 @@ import pytest
 from peakroutefinder.model import Peak
 from peakroutefinder.poc.nolans import (
     decode_polyline,
-    reference_leg_miles,
+    hybrid_route,
     route_sequence,
     split_reference_legs,
     total_miles_label,
@@ -33,7 +33,7 @@ def test_split_reference_legs_returns_miles_and_geometry() -> None:
         Peak("End", 0.0, 2.0),
     ]
 
-    legs = reference_leg_miles(reference, points)
+    legs = split_reference_legs(reference, points)
 
     assert len(legs) == 2
     assert legs[0]["miles"] == pytest.approx(69.093, abs=0.001)
