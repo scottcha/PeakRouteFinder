@@ -83,6 +83,8 @@ Verified examples with OR-Tools 9.15.6755:
 | Phase | Scope | Estimated effort | Status |
 |---|---|---|---|
 | 1. Engine core | CLI, list loading, distance matrix, exact two-phase solve | One sitting | Implemented and verified |
-| 2. Real geometry | OSRM/Valhalla table service or a precomputed CSV matrix | Days, including external data preparation | Planned |
+| 2. Real geometry | Valhalla table service or a precomputed CSV matrix | Days, including external data preparation | POC complete; Nolan's connector curation required |
 
-Phase 2 implements the existing `DistanceProvider.matrix()` interface. The solver consumes only numeric matrices, so real trail geometry can replace haversine distances without changing the optimization model.
+Phase 2 keeps distance acquisition behind the existing `DistanceProvider` seam. Trail support also needs unreachable-arc handling and provider-owned leg distances and geometry; the solver's two-phase objective remains unchanged.
+
+The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles, so missing off-trail connectors must be addressed before optimizer integration.
