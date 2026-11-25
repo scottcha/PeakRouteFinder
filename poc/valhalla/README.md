@@ -163,7 +163,7 @@ After building the peak matrix, run the terminal-aware optimizer with the same l
 ```bash
 python -m peakroutefinder.poc.trailheads \
   --budget 100 \
-  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100
+  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-exact
 ```
 
 The POC reads every `highway=trailhead` node from the pinned Colorado OSM PBF, preserves its OSM ID, and assigns each peak its nearest trailhead by haversine distance. For every possible first and last peak, directed approach and return connectors use the shorter actual path from Valhalla or DEM. CP-SAT charges those connectors on its depot arcs, so the 100-mile budget includes getting from a trailhead to the first summit and from the last summit to a trailhead. The solver chooses the endpoints and summit order jointly rather than attaching approaches to the prior answer.
@@ -181,3 +181,21 @@ The route starts at **Denny Creek Trailhead**, visits Yale → Columbia → Harv
 Red is the standard 14-peak reference GPX (100.82 miles); green is the trailhead-inclusive 15-peak optimum (90.13 miles). Both totals include approaches. Numbers follow the standard sequence, with 15–19 marking optimizer additions. The key identifies Shavano, Tabeguache, Antero, and Princeton as standard-only, and labels the selected start (S) and end (E) trailheads.
 
 This model uses the nearest tagged OSM trailhead, not necessarily the standard or safest access for a summit. Unmapped trailheads and OSM tagging gaps remain data limitations. Optimality applies to those nearest-trailhead choices and the bounded hybrid matrix.
+
+### Known-GPX-anchored result
+
+To ground the standard Nolan's transitions in the known route, pass the reference GPX and the exact-endpoint matrix:
+
+```bash
+python -m peakroutefinder.poc.trailheads \
+  --matrix /tmp/peakroutefinder-valhalla/optimize-100-exact/matrix.json \
+  --reference-gpx /tmp/peakroutefinder-valhalla/nolans-fkt.gpx \
+  --budget 100 \
+  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-gpx
+```
+
+This replaces both directions of all 13 consecutive standard summit pairs with GPX mileage plus exact-summit snap connectors. Other arcs and terminal connectors remain from the exact hybrid model. The anchored solve proves a maximum of **14 peaks** and **95.059069 miles**; no 15-peak route fits within 100 miles in this model.
+
+The optimal order is **Upper Blue Lakes Trailhead → Quandary → Lincoln → Bross → Democrat → Sherman → Massive → Elbert → Huron → Missouri → Belford → Oxford → Harvard → Columbia → Yale → Denny Creek Trailhead**. It uses 7 GPX legs totaling 32.838 miles, 7 DEM legs, and 1 Valhalla leg. All 30 leg endpoints exactly equal their summit or trailhead coordinates.
+
+This remains a partially anchored model, not a fully GPX-validated route. In particular, the winner skips La Plata and uses an unanchored 14.753-mile Elbert→Huron DEM connector instead of the known Huron→La Plata→Elbert sequence. The 14-peak bound is exact for the stated matrix, but real-world feasibility still depends on the remaining DEM and Valhalla connectors.

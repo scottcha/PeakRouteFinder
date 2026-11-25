@@ -159,7 +159,9 @@ def _route_result(
     for origin_index, destination_index in zip(route_indices, route_indices[1:]):
         source = matrix["sources"][origin_index][destination_index]
         key = f"{origin_index}:{destination_index}"
-        if source == "dem-off-trail":
+        if source == "reference-gpx":
+            leg = dict(matrix["reference_legs"][key])
+        elif source == "dem-off-trail":
             candidate = matrix["dem_legs"][key]
             leg = {
                 "origin": peaks[origin_index].name,

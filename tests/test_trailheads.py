@@ -1,7 +1,14 @@
 import pytest
 
-from peakroutefinder.model import Peak
-from peakroutefinder.poc.trailheads import nearest_trailheads, solve_terminal_route
+from peakroutefinder.distance import haversine_miles
+from peakroutefinder.model import Peak, RouteResult
+from peakroutefinder.poc.optimize import _route_result
+from peakroutefinder.poc.trailheads import (
+    anchor_reference_gpx,
+    nearest_trailheads,
+    solve_terminal_route,
+)
+from peakroutefinder.solver import SolveReport, SolveStatus
 
 
 def test_nearest_trailhead_preserves_osm_identity() -> None:
@@ -46,3 +53,51 @@ def test_terminal_costs_are_charged_and_determine_route() -> None:
         "B",
         "B Trailhead",
     ]
+
+
+def test_reference_gpx_overrides_both_directions_with_exact_endpoints(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "peakroutefinder.poc.trailheads.STANDARD_PEAK_NAMES", ("A", "B")
+    )
+    reference_path = tmp_path / "reference.gpx"
+    reference_path.write_text(
+        """<gpx xmlns="http://www.topografix.com/GPX/1/1"><trk><trkseg>
+        <trkpt lat="0.0" lon="0.01" />
+        <trkpt lat="0.0" lon="0.99" />
+        </trkseg></trk></gpx>"""
+    )
+    points = [Peak("A", 0.0, 0.0), Peak("B", 0.0, 1.0)]
+    matrix = {
+        "distances": [[0.0, 1.0], [1.0, 0.0]],
+        "sources": [["self", "valhalla"], ["valhalla", "self"]],
+        "dem_legs": {},
+        "configuration": {},
+    }
+
+    overrides = anchor_reference_gpx(points, matrix, reference_path)
+
+    expected_miles = haversine_miles((0.0, 0.0), (0.0, 1.0))
+    assert overrides[0]["miles"] == pytest.approx(expected_miles)
+    assert matrix["distances"][0][1] == pytest.approx(expected_miles)
+    assert matrix["distances"][1][0] == pytest.approx(expected_miles)
+    assert matrix["sources"][0][1] == "reference-gpx"
+    assert matrix["sources"][1][0] == "reference-gpx"
+
+    report = SolveReport(
+        RouteResult(points, expected_miles, 2, True), SolveStatus.OPTIMAL, 2
+    )
+    result = _route_result(points, matrix, report, client=None)
+    assert tuple(result["legs"][0]["geometry"][0]) == (0.0, 0.0)
+    assert tuple(result["legs"][0]["geometry"][-1]) == (0.0, 1.0)
+    assert result["legs"][0]["miles"] == pytest.approx(expected_miles)
+
+    reverse_report = SolveReport(
+        RouteResult(points[::-1], expected_miles, 2, True),
+        SolveStatus.OPTIMAL,
+        2,
+    )
+    reverse = _route_result(points, matrix, reverse_report, client=None)
+    assert tuple(reverse["legs"][0]["geometry"][0]) == (0.0, 1.0)
+    assert tuple(reverse["legs"][0]["geometry"][-1]) == (0.0, 0.0)

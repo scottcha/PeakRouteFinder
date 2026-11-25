@@ -15,7 +15,12 @@ from peakroutefinder.cli import load_peaks
 from peakroutefinder.distance import haversine_miles
 from peakroutefinder.model import Peak, RouteResult
 from peakroutefinder.poc.dem import GRID_STRIDE, DemRouter, TerrariumProvider
-from peakroutefinder.poc.nolans import ValhallaClient
+from peakroutefinder.poc.nolans import (
+    STANDARD_PEAK_NAMES,
+    ValhallaClient,
+    load_gpx,
+    split_reference_legs,
+)
 from peakroutefinder.poc.optimize import (
     VALHALLA_MAX_HAVERSINE_MILES,
     _route_result,
@@ -228,6 +233,68 @@ def solve_terminal_route(
     )
 
 
+def anchor_reference_gpx(
+    peaks: Sequence[Peak], matrix: dict[str, Any], reference_path: Path
+) -> list[dict[str, Any]]:
+    """Override standard Nolan pairs with exact-endpoint reference GPX legs."""
+    reference = load_gpx(reference_path)
+    if len(reference) < 2:
+        raise ValueError("reference GPX must contain at least two track points")
+    peak_indices = {peak.name: index for index, peak in enumerate(peaks)}
+    standard = []
+    for name in STANDARD_PEAK_NAMES:
+        if name not in peak_indices:
+            raise ValueError(f"reference GPX peak is missing from the list: {name}")
+        standard.append(peaks[peak_indices[name]])
+    reference_legs = split_reference_legs(reference, standard)
+    snap_miles = {
+        point.name: min(
+            haversine_miles((point.lat, point.lon), coordinate)
+            for coordinate in reference
+        )
+        for point in standard
+    }
+    overrides = []
+    matrix["reference_legs"] = {}
+    for origin, destination, reference_leg in zip(
+        standard, standard[1:], reference_legs
+    ):
+        origin_snap = snap_miles[origin.name]
+        destination_snap = snap_miles[destination.name]
+        miles = reference_leg["miles"] + origin_snap + destination_snap
+        overrides.append(
+            {
+                "origin": origin.name,
+                "destination": destination.name,
+                "miles": miles,
+                "raw_gpx_miles": reference_leg["miles"],
+                "origin_snap_miles": origin_snap,
+                "destination_snap_miles": destination_snap,
+            }
+        )
+        for first, second, geometry in (
+            (origin, destination, reference_leg["geometry"]),
+            (destination, origin, list(reversed(reference_leg["geometry"]))),
+        ):
+            first_index = peak_indices[first.name]
+            second_index = peak_indices[second.name]
+            key = f"{first_index}:{second_index}"
+            matrix["distances"][first_index][second_index] = miles
+            matrix["sources"][first_index][second_index] = "reference-gpx"
+            matrix["reference_legs"][key] = {
+                "origin": first.name,
+                "destination": second.name,
+                "miles": miles,
+                "source": "reference-gpx",
+                "geometry": geometry,
+            }
+    matrix["configuration"]["reference_gpx_sha256"] = hashlib.sha256(
+        reference_path.read_bytes()
+    ).hexdigest()
+    matrix["configuration"]["reference_gpx_exact_endpoints"] = True
+    return overrides
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--peaks", type=Path, default=Path("data/colorado_14ers.csv"))
@@ -242,8 +309,11 @@ def main() -> int:
     parser.add_argument(
         "--matrix",
         type=Path,
-        default=Path("/tmp/peakroutefinder-valhalla/optimize-100/matrix.json"),
+        default=Path(
+            "/tmp/peakroutefinder-valhalla/optimize-100-exact/matrix.json"
+        ),
     )
+    parser.add_argument("--reference-gpx", type=Path)
     parser.add_argument("--budget", type=float, default=100.0)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--router-url", default="http://127.0.0.1:18002")
@@ -281,6 +351,14 @@ def main() -> int:
         "dem_grid_stride": GRID_STRIDE,
         "dem_max_haversine": DEM_MAX_HAVERSINE_MILES,
     }
+    reference_overrides = []
+    if args.reference_gpx:
+        reference_overrides = anchor_reference_gpx(
+            peaks, matrix, args.reference_gpx
+        )
+        configuration["reference_gpx_sha256"] = matrix["configuration"][
+            "reference_gpx_sha256"
+        ]
     args.output_dir.mkdir(parents=True, exist_ok=True)
     client = ValhallaClient(args.router_url, args.timeout)
     dem_router = DemRouter(
@@ -330,6 +408,7 @@ def main() -> int:
         "budget_miles": args.budget,
         "route": asdict(route),
         "legs": [starts[first_index], *internal["legs"], ends[last_index]],
+        "reference_gpx_legs": reference_overrides,
         "trailhead_matches": matches,
         "configuration": configuration,
     }
