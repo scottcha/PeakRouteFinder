@@ -140,13 +140,12 @@ def test_reference_gpx_nonadjacent_pair_uses_cumulative_route(
         if override["origin"] == "A" and override["destination"] == "C"
     )
     assert nonadjacent["via_peaks"] == ["B"]
-    intermediate_snaps = 2 * haversine_miles((0.0, 0.0), (0.0, 0.01))
-    cumulative_miles = 2 * one_degree + intermediate_snaps
+    cumulative_miles = 2 * one_degree
     assert nonadjacent["miles"] == pytest.approx(cumulative_miles)
     assert matrix["distances"][0][2] == pytest.approx(cumulative_miles)
     assert matrix["distances"][2][0] == pytest.approx(cumulative_miles)
     geometry = matrix["reference_legs"]["0:2"]["geometry"]
-    assert (0.0, 1.0) in [tuple(coordinate) for coordinate in geometry]
+    assert (0.0, 1.0) not in [tuple(coordinate) for coordinate in geometry]
     reverse_geometry = matrix["reference_legs"]["2:0"]["geometry"]
     assert tuple(reverse_geometry[0]) == (0.0, 2.0)
     assert tuple(reverse_geometry[-1]) == (0.0, 0.0)

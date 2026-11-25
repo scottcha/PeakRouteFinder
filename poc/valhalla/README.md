@@ -191,10 +191,10 @@ python -m peakroutefinder.poc.trailheads \
   --matrix /tmp/peakroutefinder-valhalla/optimize-100-exact/matrix.json \
   --reference-gpx /tmp/peakroutefinder-valhalla/nolans-fkt.gpx \
   --budget 100 \
-  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-gpx-all-pairs
+  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-gpx-continuous
 ```
 
-This replaces both directions of all **91 standard summit pairs** with cumulative GPX mileage and geometry, including exact-summit snap connectors and every intermediate summit section. Non-standard arcs and terminal connectors remain from the exact hybrid model. The all-pairs solve proves a maximum of **14 peaks** and **96.433290 miles**; no 15-peak route fits within 100 miles in this model.
+This replaces both directions of all **91 standard summit pairs** with cumulative GPX mileage and geometry, including exact-endpoint snap connectors and every intermediate GPX section. Non-adjacent pairs follow the continuous track and charge only the outer endpoint snaps; they do not detour to bypassed intermediate summit coordinates. Non-standard arcs and terminal connectors remain from the exact hybrid model. The all-pairs solve proves a maximum of **14 peaks** and **96.433290 miles**; no 15-peak route fits within 100 miles in this model.
 
 The optimal order is **Mount Shavano Trailhead → Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Massive → North Halfmoon Lakes Trailhead**. These are exactly the standard 14 Nolan's summits in standard order. All 13 summit-to-summit legs use the known GPX and total 89.638460 miles. The only non-GPX legs are Mount Shavano Trailhead→Shavano (3.606354 miles) and Massive→North Halfmoon Lakes Trailhead (3.188476 miles). All 30 leg endpoints exactly equal their summit or trailhead coordinates.
 

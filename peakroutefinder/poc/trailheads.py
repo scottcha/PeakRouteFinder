@@ -246,7 +246,6 @@ def anchor_reference_gpx(
         if name not in peak_indices:
             raise ValueError(f"reference GPX peak is missing from the list: {name}")
         standard.append(peaks[peak_indices[name]])
-    reference_legs = split_reference_legs(reference, standard)
     snap_miles = {
         point.name: min(
             haversine_miles((point.lat, point.lon), coordinate)
@@ -254,27 +253,16 @@ def anchor_reference_gpx(
         )
         for point in standard
     }
-    segments = []
-    for reference_leg in reference_legs:
-        segments.append(
-            {
-                "miles": reference_leg["miles"],
-                "raw_gpx_miles": reference_leg["raw_gpx_miles"],
-                "geometry": reference_leg["geometry"],
-            }
-        )
     overrides = []
     matrix["reference_legs"] = {}
     for start_index, origin in enumerate(standard):
         for destination_index in range(start_index + 1, len(standard)):
             destination = standard[destination_index]
-            selected_segments = segments[start_index:destination_index]
-            miles = sum(segment["miles"] for segment in selected_segments)
-            geometry = []
-            for segment in selected_segments:
-                geometry.extend(
-                    segment["geometry"] if not geometry else segment["geometry"][1:]
-                )
+            reference_leg = split_reference_legs(
+                reference, [origin, destination]
+            )[0]
+            miles = reference_leg["miles"]
+            geometry = reference_leg["geometry"]
             via_peaks = [
                 point.name
                 for point in standard[start_index + 1 : destination_index]
@@ -284,9 +272,7 @@ def anchor_reference_gpx(
                     "origin": origin.name,
                     "destination": destination.name,
                     "miles": miles,
-                    "raw_gpx_miles": sum(
-                        segment["raw_gpx_miles"] for segment in selected_segments
-                    ),
+                    "raw_gpx_miles": reference_leg["raw_gpx_miles"],
                     "origin_snap_miles": snap_miles[origin.name],
                     "destination_snap_miles": snap_miles[destination.name],
                     "via_peaks": via_peaks,
