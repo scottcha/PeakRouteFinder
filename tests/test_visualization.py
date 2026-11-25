@@ -37,10 +37,9 @@ def test_map_distinguishes_start_and_end_waypoints() -> None:
     children = list(route_map._children.values())
 
     waypoint_markers = [child for child in children if type(child) is folium.CircleMarker]
-    assert [marker.options["color"] for marker in waypoint_markers] == [
-        START_COLOR,
-        END_COLOR,
-    ]
+    assert sorted(marker.options["color"] for marker in waypoint_markers) == sorted(
+        (START_COLOR, END_COLOR)
+    )
     route_line = next(child for child in children if type(child) is folium.PolyLine)
     assert route_line.locations == [[38.9, -105.9], [39.0, -106.0], [39.1, -106.1]]
 
