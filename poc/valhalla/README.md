@@ -90,10 +90,6 @@ Green is the 104.01-mile hybrid, blue is the standard Valhalla route, and red is
 
 Green is the 92.65-mile estimated direct hybrid, blue is the standard Valhalla route, and red is the reference GPX. Straight green segments are candidate connectors, not terrain-derived walking paths.
 
-![DEM-aware hybrid compared with Valhalla and the reference GPX](dem-hybrid-comparison.png)
-
-Green is the 91.07-mile DEM-aware hybrid, blue is Valhalla, and red is the reference GPX. DEM-selected green legs follow A* terrain paths rather than straight lines.
-
 ### Standard-route legs
 
 | Leg | Valhalla | GPX | Hybrid | Hybrid source |
@@ -160,4 +156,6 @@ At 100 miles, the exact upper bound is **17 peaks**: this matrix contains no 18-
 
 An 18th peak becomes possible at 102.97 miles by adding Massive; a 19th becomes possible at 109.13 miles by adding Quandary. The maximum remains 19 at 120 miles. These are matrix results, not proof that no real-world terrain route exists beyond the evaluated DEM cutoff.
 
-![Exact 17-peak hybrid optimum under 100 miles](hybrid-optimal-100.png)
+![Standard Nolan's versus the proposed 17-peak optimum, with numbered peaks and a name key](standard-vs-optimal-100.png)
+
+Red is the standard 14-peak reference GPX (100.82 miles including trailhead approaches); green is the proposed 17-peak hybrid optimum (97.26 miles, summit-only). Numbers follow the standard Nolan's sequence, with 15–18 marking the optimizer's additions. The key identifies Massive as standard-only and Sherman, Democrat, Lincoln, and Bross as additions.
