@@ -48,7 +48,7 @@ The GPX comes from the [Fastest Known Time Nolan's route page](https://fastestkn
 | Costing | `pedestrian`, `shortest=true`, `use_hills=1` |
 | Hiking difficulty | 6, the most permissive `sac_scale` setting; this is a coverage POC, not a safety recommendation |
 | Maximum route distance | 250,000 meters, explicitly above Valhalla's 100,000-meter default |
-| GPX off-trail penalty | 1.35× for candidate selection only; actual GPX mileage is still reported |
+| GPX alternative penalty | 1.35× for candidate selection only; actual GPX mileage is still reported |
 
 ## Results
 
@@ -62,7 +62,7 @@ Valhalla returned geometry for every requested leg. No leg failed, but many retu
 | GPX-backed hybrid, same endpoints | 104.01 mi | 100.82 mi | +3.19 mi (+3.2%) |
 | Sherman-to-Shavano variant, summit to summit | 166.39 mi | No matching GPX | Not compared |
 
-The hybrid selects each GPX leg when `GPX miles × 1.35 < Valhalla miles`, or when Valhalla fails. It uses **7 GPX-backed connectors**, retains Valhalla on 8 legs, and has **121.33 penalty-weighted miles**. Actual mileage remains the geometric distance of the selected path; the penalty affects only selection. The `gpx-backed-off-trail` source identifies the connector's evidence, not a claim that every GPX point is off-trail.
+The hybrid selects each GPX leg when `GPX miles × 1.35 < Valhalla miles`, or when Valhalla fails. It uses **7 GPX alternatives**, retains Valhalla on 8 legs, and has **121.33 penalty-weighted miles**. Actual mileage remains the geometric distance of the selected path; the penalty affects only selection. The `gpx-alternative` source explicitly denotes whole-leg reference geometry; no segment-level off-trail classification is claimed.
 
 The Sherman variant uses Sherman, Elbert, La Plata, Huron, Missouri, Belford, Oxford, Harvard, Columbia, Yale, Princeton, Antero, Tabeguache, and Shavano. It excludes trailhead approaches because its reference trailheads were not supplied.
 

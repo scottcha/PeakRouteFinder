@@ -42,7 +42,7 @@ def test_split_reference_legs_returns_miles_and_geometry() -> None:
     assert legs[1]["geometry"] == [(0.0, 1.0), (0.0, 2.0)]
 
 
-def test_hybrid_route_selects_penalized_gpx_connectors() -> None:
+def test_hybrid_route_selects_penalized_gpx_alternatives() -> None:
     valhalla_legs = [
         {
             "origin": "A",
@@ -75,14 +75,19 @@ def test_hybrid_route_selects_penalized_gpx_connectors() -> None:
     route = hybrid_route({"legs": valhalla_legs}, reference_legs)
 
     assert route["complete"] is True
-    assert route["gpx_connector_count"] == 2
+    assert route["gpx_alternative_count"] == 2
     assert [leg["source"] for leg in route["legs"]] == [
-        "gpx-backed-off-trail",
+        "gpx-alternative",
         "valhalla",
-        "gpx-backed-off-trail",
+        "gpx-alternative",
     ]
     assert route["legs"][0]["geometry"] == reference_legs[0]["geometry"]
     assert route["legs"][1]["geometry"] == valhalla_legs[1]["geometry"]
+    assert route["legs"][2]["geometry"] == reference_legs[2]["geometry"]
+    assert route["legs"][2]["effective_miles"] == pytest.approx(
+        route["legs"][2]["gpx_effective_miles"]
+    )
+    assert route["legs"][2]["valhalla_miles"] is None
     assert route["total_miles"] == pytest.approx(
         69.093 + 90.0 + 69.093, abs=0.001
     )

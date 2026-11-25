@@ -17,7 +17,7 @@ EARTH_RADIUS_MILES = 3958.7613
 GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
 MAX_HIKING_DIFFICULTY = 6
-GPX_OFFTRAIL_PENALTY = 1.35
+GPX_ALTERNATIVE_PENALTY = 1.35
 STANDARD_PEAK_NAMES = (
     "Mount Shavano",
     "Tabeguache Peak",
@@ -273,11 +273,11 @@ def route_sequence(client: ValhallaClient, points: Sequence[Peak]) -> dict:
 def hybrid_route(
     valhalla_route: dict,
     reference_legs: Sequence[dict],
-    offtrail_penalty: float = GPX_OFFTRAIL_PENALTY,
+    alternative_penalty: float = GPX_ALTERNATIVE_PENALTY,
 ) -> dict:
     """Choose between Valhalla and penalty-weighted GPX-backed connectors."""
-    if offtrail_penalty < 1.0:
-        raise ValueError("off-trail penalty must be at least 1.0")
+    if alternative_penalty < 1.0:
+        raise ValueError("GPX alternative penalty must be at least 1.0")
     if len(valhalla_route["legs"]) != len(reference_legs):
         raise ValueError("reference legs do not match the Valhalla route")
 
@@ -286,7 +286,7 @@ def hybrid_route(
         valhalla_route["legs"], reference_legs
     ):
         gpx_miles = path_miles(reference_leg["geometry"])
-        gpx_effective_miles = gpx_miles * offtrail_penalty
+        gpx_effective_miles = gpx_miles * alternative_penalty
         use_valhalla = (
             valhalla_leg["status"] == "ok"
             and valhalla_leg["miles"] <= gpx_effective_miles
@@ -295,7 +295,7 @@ def hybrid_route(
             "origin": valhalla_leg["origin"],
             "destination": valhalla_leg["destination"],
             "status": "ok",
-            "source": "valhalla" if use_valhalla else "gpx-backed-off-trail",
+            "source": "valhalla" if use_valhalla else "gpx-alternative",
             "miles": valhalla_leg["miles"] if use_valhalla else gpx_miles,
             "effective_miles": (
                 valhalla_leg["miles"] if use_valhalla else gpx_effective_miles
@@ -306,7 +306,7 @@ def hybrid_route(
                 else reference_leg["geometry"]
             ),
             "reference_gpx_miles": reference_leg["miles"],
-            "gpx_connector_miles": gpx_miles,
+            "gpx_alternative_miles": gpx_miles,
             "gpx_effective_miles": gpx_effective_miles,
             "valhalla_miles": (
                 valhalla_leg["miles"] if valhalla_leg["status"] == "ok" else None
@@ -320,8 +320,8 @@ def hybrid_route(
         "complete": True,
         "total_miles": sum(leg["miles"] for leg in legs),
         "effective_miles": sum(leg["effective_miles"] for leg in legs),
-        "gpx_connector_count": sum(
-            leg["source"] == "gpx-backed-off-trail" for leg in legs
+        "gpx_alternative_count": sum(
+            leg["source"] == "gpx-alternative" for leg in legs
         ),
         "legs": legs,
     }
@@ -412,7 +412,7 @@ def main() -> int:
             "shortest": True,
             "max_hiking_difficulty": MAX_HIKING_DIFFICULTY,
             "max_distance_meters": MAX_DISTANCE_METERS,
-            "gpx_offtrail_penalty": GPX_OFFTRAIL_PENALTY,
+            "gpx_alternative_penalty": GPX_ALTERNATIVE_PENALTY,
             "reference_gpx_sha256": hashlib.sha256(
                 args.reference_gpx.read_bytes()
             ).hexdigest(),
@@ -434,7 +434,7 @@ def main() -> int:
         if route_name == "hybrid":
             summary += (
                 f" (effective {route['effective_miles']:.2f}; "
-                f"{route['gpx_connector_count']} GPX connectors)"
+                f"{route['gpx_alternative_count']} GPX alternatives)"
             )
         print(f"{route_name}: {summary}")
         for leg in route["legs"]:
