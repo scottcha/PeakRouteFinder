@@ -137,14 +137,26 @@ def split_reference_legs(
     for index, (previous, current) in enumerate(zip(indices, indices[1:])):
         origin = points[index]
         destination = points[index + 1]
-        geometry = [
-            (origin.lat, origin.lon),
+        origin_snap = haversine_miles(
+            (origin.lat, origin.lon), reference[previous]
+        )
+        destination_snap = haversine_miles(
+            (destination.lat, destination.lon), reference[current]
+        )
+        raw_gpx_miles = cumulative[current] - cumulative[previous]
+        geometry = [(origin.lat, origin.lon)]
+        for coordinate in (
+            reference[previous],
             *reference[previous + 1 : current],
+            reference[current],
             (destination.lat, destination.lon),
-        ]
+        ):
+            if coordinate != geometry[-1]:
+                geometry.append(coordinate)
         legs.append(
             {
-                "miles": cumulative[current] - cumulative[previous],
+                "miles": raw_gpx_miles + origin_snap + destination_snap,
+                "raw_gpx_miles": raw_gpx_miles,
                 "geometry": geometry,
             }
         )

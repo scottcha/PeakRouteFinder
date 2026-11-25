@@ -191,11 +191,11 @@ python -m peakroutefinder.poc.trailheads \
   --matrix /tmp/peakroutefinder-valhalla/optimize-100-exact/matrix.json \
   --reference-gpx /tmp/peakroutefinder-valhalla/nolans-fkt.gpx \
   --budget 100 \
-  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-gpx
+  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100-gpx-all-pairs
 ```
 
-This replaces both directions of all 13 consecutive standard summit pairs with GPX mileage plus exact-summit snap connectors. Other arcs and terminal connectors remain from the exact hybrid model. The anchored solve proves a maximum of **14 peaks** and **95.059069 miles**; no 15-peak route fits within 100 miles in this model.
+This replaces both directions of all **91 standard summit pairs** with cumulative GPX mileage and geometry, including exact-summit snap connectors and every intermediate summit section. Non-standard arcs and terminal connectors remain from the exact hybrid model. The all-pairs solve proves a maximum of **14 peaks** and **96.433290 miles**; no 15-peak route fits within 100 miles in this model.
 
-The optimal order is **Upper Blue Lakes Trailhead → Quandary → Lincoln → Bross → Democrat → Sherman → Massive → Elbert → Huron → Missouri → Belford → Oxford → Harvard → Columbia → Yale → Denny Creek Trailhead**. It uses 7 GPX legs totaling 32.838 miles, 7 DEM legs, and 1 Valhalla leg. All 30 leg endpoints exactly equal their summit or trailhead coordinates.
+The optimal order is **Mount Shavano Trailhead → Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Massive → North Halfmoon Lakes Trailhead**. These are exactly the standard 14 Nolan's summits in standard order. All 13 summit-to-summit legs use the known GPX and total 89.638460 miles. The only non-GPX legs are Mount Shavano Trailhead→Shavano (3.606354 miles) and Massive→North Halfmoon Lakes Trailhead (3.188476 miles). All 30 leg endpoints exactly equal their summit or trailhead coordinates.
 
-This remains a partially anchored model, not a fully GPX-validated route. In particular, the winner skips La Plata and uses an unanchored 14.753-mile Elbert→Huron DEM connector instead of the known Huron→La Plata→Elbert sequence. The 14-peak bound is exact for the stated matrix, but real-world feasibility still depends on the remaining DEM and Valhalla connectors.
+The 14-peak bound is exact for this all-pairs anchored matrix. Unlike the adjacent-only result, no unanchored summit-to-summit connector remains in the winning route. Real-world feasibility of the two nearest-trailhead approaches still depends on the DEM model and OSM trailhead tagging.

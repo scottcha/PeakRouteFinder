@@ -236,7 +236,7 @@ def solve_terminal_route(
 def anchor_reference_gpx(
     peaks: Sequence[Peak], matrix: dict[str, Any], reference_path: Path
 ) -> list[dict[str, Any]]:
-    """Override standard Nolan pairs with exact-endpoint reference GPX legs."""
+    """Override every standard pair with cumulative exact-endpoint GPX legs."""
     reference = load_gpx(reference_path)
     if len(reference) < 2:
         raise ValueError("reference GPX must contain at least two track points")
@@ -254,40 +254,60 @@ def anchor_reference_gpx(
         )
         for point in standard
     }
-    overrides = []
-    matrix["reference_legs"] = {}
-    for origin, destination, reference_leg in zip(
-        standard, standard[1:], reference_legs
-    ):
-        origin_snap = snap_miles[origin.name]
-        destination_snap = snap_miles[destination.name]
-        miles = reference_leg["miles"] + origin_snap + destination_snap
-        overrides.append(
+    segments = []
+    for reference_leg in reference_legs:
+        segments.append(
             {
-                "origin": origin.name,
-                "destination": destination.name,
-                "miles": miles,
-                "raw_gpx_miles": reference_leg["miles"],
-                "origin_snap_miles": origin_snap,
-                "destination_snap_miles": destination_snap,
+                "miles": reference_leg["miles"],
+                "raw_gpx_miles": reference_leg["raw_gpx_miles"],
+                "geometry": reference_leg["geometry"],
             }
         )
-        for first, second, geometry in (
-            (origin, destination, reference_leg["geometry"]),
-            (destination, origin, list(reversed(reference_leg["geometry"]))),
-        ):
-            first_index = peak_indices[first.name]
-            second_index = peak_indices[second.name]
-            key = f"{first_index}:{second_index}"
-            matrix["distances"][first_index][second_index] = miles
-            matrix["sources"][first_index][second_index] = "reference-gpx"
-            matrix["reference_legs"][key] = {
-                "origin": first.name,
-                "destination": second.name,
-                "miles": miles,
-                "source": "reference-gpx",
-                "geometry": geometry,
-            }
+    overrides = []
+    matrix["reference_legs"] = {}
+    for start_index, origin in enumerate(standard):
+        for destination_index in range(start_index + 1, len(standard)):
+            destination = standard[destination_index]
+            selected_segments = segments[start_index:destination_index]
+            miles = sum(segment["miles"] for segment in selected_segments)
+            geometry = []
+            for segment in selected_segments:
+                geometry.extend(
+                    segment["geometry"] if not geometry else segment["geometry"][1:]
+                )
+            via_peaks = [
+                point.name
+                for point in standard[start_index + 1 : destination_index]
+            ]
+            overrides.append(
+                {
+                    "origin": origin.name,
+                    "destination": destination.name,
+                    "miles": miles,
+                    "raw_gpx_miles": sum(
+                        segment["raw_gpx_miles"] for segment in selected_segments
+                    ),
+                    "origin_snap_miles": snap_miles[origin.name],
+                    "destination_snap_miles": snap_miles[destination.name],
+                    "via_peaks": via_peaks,
+                }
+            )
+            for first, second, directed_geometry in (
+                (origin, destination, geometry),
+                (destination, origin, list(reversed(geometry))),
+            ):
+                first_index = peak_indices[first.name]
+                second_index = peak_indices[second.name]
+                key = f"{first_index}:{second_index}"
+                matrix["distances"][first_index][second_index] = miles
+                matrix["sources"][first_index][second_index] = "reference-gpx"
+                matrix["reference_legs"][key] = {
+                    "origin": first.name,
+                    "destination": second.name,
+                    "miles": miles,
+                    "source": "reference-gpx",
+                    "geometry": directed_geometry,
+                }
     matrix["configuration"]["reference_gpx_sha256"] = hashlib.sha256(
         reference_path.read_bytes()
     ).hexdigest()
