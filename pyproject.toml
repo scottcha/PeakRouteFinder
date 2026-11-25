@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "peakroutefinder"
+version = "1.0.0"
+description = "Prove the maximum number of peaks traversable within a mileage budget"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "ortools==9.15.6755",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<10",
+]
+
+[project.scripts]
+peakroutefinder = "peakroutefinder.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["peakroutefinder*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+peakroutefinder = ["data/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

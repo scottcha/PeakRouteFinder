@@ -1,4 +1,75 @@
-PeakRouteFinder
-===============
+# PeakRouteFinder
 
-Script to find route across peaks from a list within a set distance (inspired by nolan's 14)
+PeakRouteFinder answers the Nolan's 14-style question: **what is the largest number of peaks you can traverse within a mileage budget?** It uses an exact OR-Tools CP-SAT model, so a successful run proves that no route with more peaks exists and that the selected route has the lowest mileage at that peak count.
+
+The current distance model is straight-line haversine mileage. Optional start and end coordinates represent trailheads, and their travel legs count toward the budget.
+
+## Quick start
+
+Python 3.11 or newer is required.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev]'
+pytest -q
+python -m peakroutefinder data/colorado_14ers.csv --budget 100
+```
+
+The final command prints `PROVEN OPTIMAL`, a 20-peak route, its 97.84-mile total, each leg, and the complete visit order.
+
+Add arbitrary trailheads with comma-separated latitude and longitude:
+
+```bash
+python -m peakroutefinder data/colorado_14ers.csv --budget 100 \
+    --start "39.4718,-106.0975" --end "39.0046,-106.3706"
+```
+
+Omit `--end` for an open route beginning at the start waypoint. Omit both waypoints to optimize only the supplied peak list.
+
+## Input and output
+
+The input CSV must have exactly three columns and at least one peak:
+
+```csv
+Lat,Lon,Name
+39.1178,-106.4454,Mount Elbert
+39.1875,-106.4757,Mount Massive
+```
+
+Malformed rows, invalid coordinates, and empty files are rejected with the file name and line number. Duplicate names are allowed and are disambiguated by route position in the output.
+
+```text
+python -m peakroutefinder <list.csv> --budget MILES
+    [--start LAT,LON] [--end LAT,LON]
+    [--time-limit SECONDS] [--workers COUNT] [--out results.csv]
+```
+
+`--time-limit` applies separately to each solve phase and defaults to 120 seconds. `--workers` defaults to the smaller of 16 and the available CPU count. `--out` writes `order,peak,leg_miles` rows and replaces an existing file.
+
+Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
+
+## How the proof works
+
+Peaks and waypoints become nodes in a CP-SAT circuit. Each unvisited node takes a self-loop, while visited nodes form one path connected to a zero-cost dummy depot. Taken non-depot arcs contribute their integer milli-mile distances to the budget constraint.
+
+The first phase maximizes the number of visited peaks. The second rebuilds the model, fixes that count, and minimizes total mileage. `PROVEN OPTIMAL` requires both phases to finish with CP-SAT status `OPTIMAL`.
+
+The proof applies to the supplied distance matrix. Straight-line distances are not trail distances, so the current results should not be interpreted as real-world route feasibility.
+
+Verified examples with OR-Tools 9.15.6755:
+
+| Instance | Budget | Peaks | Miles | Result |
+|---|---:|---:|---:|---|
+| Colorado 53 | 100 mi | 20 | 97.84 | Proven optimal |
+| Colorado 53, start and end | 100 mi | 16 | 92.32 | Proven optimal |
+| Washington top 100 | 60 mi | 27 | 57.50 | Proven optimal |
+
+## Roadmap
+
+| Phase | Scope | Estimated effort | Status |
+|---|---|---|---|
+| 1. Engine core | CLI, list loading, distance matrix, exact two-phase solve | One sitting | Implemented and verified |
+| 2. Real geometry | OSRM/Valhalla table service or a precomputed CSV matrix | Days, including external data preparation | Planned |
+
+Phase 2 implements the existing `DistanceProvider.matrix()` interface. The solver consumes only numeric matrices, so real trail geometry can replace haversine distances without changing the optimization model.
