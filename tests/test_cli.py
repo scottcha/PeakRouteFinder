@@ -19,9 +19,10 @@ def test_colorado_optimal_route(capsys) -> None:
     assert "Peaks: 20" in captured.out
 
 
-def test_colorado_with_waypoints_and_csv(capsys, tmp_path) -> None:
-    """Trailhead-to-trailhead optimization includes waypoint legs and CSV export."""
+def test_colorado_with_waypoints_csv_and_map(capsys, tmp_path) -> None:
+    """Waypoint optimization exports route legs and an interactive map."""
     output = tmp_path / "route.csv"
+    map_output = tmp_path / "route.html"
     exit_code = main(
         [
             str(DATA_DIR / "colorado_14ers.csv"),
@@ -37,6 +38,8 @@ def test_colorado_with_waypoints_and_csv(capsys, tmp_path) -> None:
             "4",
             "--out",
             str(output),
+            "--map",
+            str(map_output),
         ]
     )
     captured = capsys.readouterr()
@@ -49,6 +52,9 @@ def test_colorado_with_waypoints_and_csv(capsys, tmp_path) -> None:
     assert rows[1] == ["1", "Start", "0.0"]
     assert rows[-1][1] == "End"
     assert len(rows) == 19
+    map_html = map_output.read_text(encoding="utf-8")
+    assert "server.arcgisonline.com" in map_html.lower()
+    assert "L.polyline" in map_html
 
 
 def test_washington_optimal_route(capsys) -> None:
