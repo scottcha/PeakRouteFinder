@@ -53,7 +53,7 @@ The GPX comes from the [Fastest Known Time Nolan's route page](https://fastestkn
 
 The reference GPX contains 146,806 track points and measures **100.82 miles** using the project's haversine constant. It runs from Blank Gulch to Fish Hatchery and passes within 0.007 miles of every standard Nolan's summit.
 
-Valhalla returned geometry for every requested leg. No leg failed, but many returned long loops around missing off-trail connections.
+Valhalla returned geometry for every requested leg. No leg failed, but many returned long loops around missing or excluded off-trail connections.
 
 | Route | Valhalla | Reference | Difference |
 |---|---:|---:|---:|
@@ -90,8 +90,10 @@ Valhalla snapped every input to a pedestrian edge, but several summits are far f
 
 The returned shapes begin and end at the input coordinates and include straight off-network connectors to snapped edges. Consequently, a successful response is not proof that a continuous mapped trail exists. Snap distances and path shape must be part of any production coverage report.
 
+These connectors are included in Valhalla's reported distance. On the checked Columbia-to-Harvard leg, the decoded geometry measures 2.471967 miles and the summary reports 2.474700 miles, a rounding-level difference. Its shorter distance than the GPX represents a different, more direct line, not omitted connector mileage.
+
 ## Verdict and next step
 
 **Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using this matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route.
 
-The next POC should derive the known Nolan's connectors from the reference GPX, add only the missing off-trail segments as a reviewed private OSM overlay, and rerun this comparison. The target is explained per-leg differences rather than an arbitrary total-mileage threshold. Until then, do not integrate Valhalla distances into the optimizer or label its output trail-optimal.
+The next POC should map-match the reference GPX with `trace_attributes` to distinguish absent ways from ways excluded by access or difficulty tags. Derive only the required off-trail segments, add them as a reviewed private OSM overlay, and rerun this comparison. The target is explained per-leg differences rather than an arbitrary total-mileage threshold. Until then, do not integrate Valhalla distances into the optimizer or label its output trail-optimal.

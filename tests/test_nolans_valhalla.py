@@ -34,9 +34,9 @@ def test_reference_leg_miles_splits_track_at_waypoints() -> None:
 
     legs = reference_leg_miles(reference, points)
 
-    assert legs[0] == 0.0
+    assert len(legs) == 2
+    assert legs[0] == pytest.approx(69.093, abs=0.001)
     assert legs[1] == pytest.approx(69.093, abs=0.001)
-    assert legs[2] == pytest.approx(69.093, abs=0.001)
 
 
 def test_failed_leg_does_not_produce_partial_route_total() -> None:

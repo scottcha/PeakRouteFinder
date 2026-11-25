@@ -134,7 +134,7 @@ def reference_leg_miles(
     ]
     if indices != sorted(indices):
         raise ValueError("route waypoints do not follow the reference track order")
-    return [0.0] + [
+    return [
         cumulative[current] - cumulative[previous]
         for previous, current in zip(indices, indices[1:])
     ]
@@ -326,7 +326,7 @@ def main() -> int:
         "sherman-variant": route_sequence(client, variant_points),
     }
     reference_legs = reference_leg_miles(reference, standard_points)
-    for leg, reference_miles in zip(routes["standard"]["legs"], reference_legs[1:]):
+    for leg, reference_miles in zip(routes["standard"]["legs"], reference_legs):
         leg["reference_gpx_miles"] = reference_miles
         if leg["status"] == "ok":
             leg["minus_reference_miles"] = leg["miles"] - reference_miles
