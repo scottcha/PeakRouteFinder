@@ -133,7 +133,7 @@ With the local Valhalla service running, optimize the full Colorado list through
 ```bash
 python -m peakroutefinder.poc.optimize \
   --budget 100 \
-  --output-dir /tmp/peakroutefinder-valhalla/optimize-100
+  --output-dir /tmp/peakroutefinder-valhalla/optimize-100-exact
 ```
 
 The provider queries Valhalla for pairs within 100 straight-line miles and evaluates directed DEM alternatives for pairs within 15 miles. Farther pairs retain haversine, and unavailable Valhalla pairs receive the router's 124.27-mile over-limit lower bound; neither can create a false route within a 100-mile budget. Budgets above 100 miles are rejected because these lower bounds are not actual distances. Each arc selects the lower of actual Valhalla and DEM path miles, not hiking-effort miles. DEM coverage beyond 15 miles is not evaluated, so optimality applies to this bounded hybrid matrix rather than every possible terrain path.
