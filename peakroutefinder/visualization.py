@@ -86,11 +86,12 @@ def build_map(peaks: Sequence[Peak], route: RouteResult) -> folium.Map:
             continue
 
         name_icon = folium.DivIcon(
-            icon_size=(180, 24),
+            icon_size=None,
             icon_anchor=(-6, 12),
             class_name="peak-name-label",
             html=(
-                f'<div style="white-space:nowrap;background:#ffffffde;'
+                f'<div style="display:inline-block;width:max-content;'
+                f'white-space:nowrap;background:#ffffffde;'
                 f"color:{ROUTE_COLOR};border-left:3px solid {ROUTE_COLOR};"
                 f'padding:2px 5px;font:bold 12px/18px sans-serif;">'
                 f"{position}. {escape(peak.name)}</div>"
