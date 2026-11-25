@@ -1,0 +1,27 @@
+PROVEN OPTIMAL
+Peaks: 20
+Total miles: 97.84
+
+Leg  Peak                                      Miles
+  1  Mount Shavano                                0.00
+  2  Tabeguache Peak                              0.76
+  3  Mount Antero                                 3.37
+  4  Mount Princeton                              5.19
+  5  Mount Yale                                   7.61
+  6  Mount Columbia                               4.22
+  7  Mount Harvard                                1.89
+  8  Mount Oxford                                 2.96
+  9  Mount Belford                                1.21
+ 10  Missouri Mountain                            1.32
+ 11  Huron Peak                                   3.21
+ 12  La Plata Peak                                6.09
+ 13  Mount Elbert                                 6.28
+ 14  Mount Sherman                               16.51
+ 15  Mount Democrat                               8.08
+ 16  Mount Bross                                  1.75
+ 17  Mount Lincoln                                1.13
+ 18  Quandary Peak                                3.18
+ 19  Grays Peak                                  22.45
+ 20  Torreys Peak                                 0.64
+
+Route: Mount Shavano -> Tabeguache Peak -> Mount Antero -> Mount Princeton -> Mount Yale -> Mount Columbia -> Mount Harvard -> Mount Oxford -> Mount Belford -> Missouri Mountain -> Huron Peak -> La Plata Peak -> Mount Elbert -> Mount Sherman -> Mount Democrat -> Mount Bross -> Mount Lincoln -> Quandary Peak -> Grays Peak -> Torreys Peak
