@@ -171,8 +171,21 @@ def _route_result(
                 "geometry": candidate["geometry"],
             }
         else:
-            leg = client.route(peaks[origin_index], peaks[destination_index])
-            leg["source"] = source
+            leg = {
+                "origin": peaks[origin_index].name,
+                "destination": peaks[destination_index].name,
+                "miles": matrix["distances"][origin_index][destination_index],
+                "source": source,
+            }
+            try:
+                valhalla_leg = client.route(
+                    peaks[origin_index], peaks[destination_index]
+                )
+            except RuntimeError as error:
+                leg.update(status="error", error=str(error), geometry=[])
+            else:
+                leg.update(valhalla_leg)
+                leg["miles"] = matrix["distances"][origin_index][destination_index]
         legs.append(leg)
     return {
         "status": report.status.value,
@@ -200,6 +213,11 @@ def main() -> int:
     parser.add_argument("--time-limit", type=float, default=DEFAULT_TIME_LIMIT_SECONDS)
     parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
     args = parser.parse_args()
+    if not 0.0 <= args.budget <= VALHALLA_MAX_HAVERSINE_MILES:
+        parser.error(
+            f"--budget must be between 0 and {VALHALLA_MAX_HAVERSINE_MILES:g} "
+            "for this bounded matrix"
+        )
 
     peaks = load_peaks(args.peaks)
     configuration = {

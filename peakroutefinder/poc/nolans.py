@@ -14,6 +14,7 @@ from peakroutefinder.distance import haversine_miles
 from peakroutefinder.model import Peak
 from peakroutefinder.poc.dem import (
     GRID_STRIDE,
+    METERS_PER_MILE,
     TERRARIUM_URL,
     DemRouter,
     TerrariumProvider,
@@ -23,7 +24,6 @@ GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
 MAX_MATRIX_DISTANCE_METERS = 200_000
 MAX_MATRIX_LOCATIONS = 2500
-METERS_PER_MILE = 1609.344
 MAX_HIKING_DIFFICULTY = 6
 GPX_ALTERNATIVE_PENALTY = 1.35
 DIRECT_OFFTRAIL_FACTOR = 1.65
@@ -259,6 +259,8 @@ class ValhallaClient:
                         "units": "miles",
                     },
                 )
+                if not isinstance(response, dict):
+                    raise RuntimeError("Valhalla returned an invalid matrix response")
                 rows = response["sources_to_targets"]
                 if len(rows) != 1 or len(rows[0]) != len(batch):
                     raise RuntimeError("Valhalla returned an incomplete distance row")
