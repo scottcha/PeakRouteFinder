@@ -156,6 +156,26 @@ At 100 miles, the exact upper bound is **17 peaks**: this matrix contains no 18-
 
 An 18th peak becomes possible at 102.97 miles by adding Massive; a 19th becomes possible at 109.13 miles by adding Quandary. The maximum remains 19 at 120 miles. These are matrix results, not proof that no real-world terrain route exists beyond the evaluated DEM cutoff.
 
-![Standard Nolan's versus the proposed 17-peak optimum, with numbered peaks and a name key](standard-vs-optimal-100.png)
+## Trailhead-inclusive optimization
 
-Red is the standard 14-peak reference GPX (100.82 miles including trailhead approaches); green is the proposed 17-peak hybrid optimum (97.26 miles, summit-only). Numbers follow the standard Nolan's sequence, with 15–18 marking the optimizer's additions. The key identifies Massive as standard-only and Sherman, Democrat, Lincoln, and Bross as additions.
+After building the peak matrix, run the terminal-aware optimizer with the same local Valhalla and DEM data:
+
+```bash
+python -m peakroutefinder.poc.trailheads \
+  --budget 100 \
+  --output-dir /tmp/peakroutefinder-valhalla/trailheads-100
+```
+
+The POC reads every `highway=trailhead` node from the pinned Colorado OSM PBF, preserves its OSM ID, and assigns each peak its nearest trailhead by haversine distance. For every possible first and last peak, directed approach and return connectors use the shorter actual path from Valhalla or DEM. CP-SAT charges those connectors on its depot arcs, so the 100-mile budget includes getting from a trailhead to the first summit and from the last summit to a trailhead. The solver chooses the endpoints and summit order jointly rather than attaching approaches to the prior answer.
+
+### 100-mile result
+
+CP-SAT proved a maximum of **15 peaks** with a cheapest maximum-count route of **90.106964 miles**. No 16-peak route fits within 100 miles under this terminal-cost model.
+
+The route starts at **Denny Creek Trailhead**, visits Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Massive → Sherman → Democrat → Bross → Lincoln → Quandary, and ends at **Upper Blue Lakes Trailhead**. The opening Denny Creek→Yale connector is 3.124 miles and the closing Quandary→Upper Blue Lakes connector is 1.738 miles. The complete 16-leg route uses 14 DEM connectors and 2 Valhalla connectors; all 106 candidate terminal connectors succeeded without DEM errors.
+
+![Standard Nolan's versus the trailhead-inclusive 15-peak optimum, with numbered peaks and a name key](standard-vs-optimal-100.png)
+
+Red is the standard 14-peak reference GPX (100.82 miles); green is the trailhead-inclusive 15-peak optimum (90.11 miles). Both totals include approaches. Numbers follow the standard sequence, with 15–19 marking optimizer additions. The key identifies Shavano, Tabeguache, Antero, and Princeton as standard-only, and labels the selected start (S) and end (E) trailheads.
+
+This model uses the nearest tagged OSM trailhead, not necessarily the standard or safest access for a summit. Unmapped trailheads and OSM tagging gaps remain data limitations. Optimality applies to those nearest-trailhead choices and the bounded hybrid matrix.
