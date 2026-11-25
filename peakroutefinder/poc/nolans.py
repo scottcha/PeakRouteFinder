@@ -18,6 +18,7 @@ GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
 MAX_HIKING_DIFFICULTY = 6
 GPX_ALTERNATIVE_PENALTY = 1.35
+DIRECT_OFFTRAIL_FACTOR = 1.65
 STANDARD_PEAK_NAMES = (
     "Mount Shavano",
     "Tabeguache Peak",
@@ -327,6 +328,65 @@ def hybrid_route(
     }
 
 
+def direct_offtrail_route(
+    valhalla_route: dict,
+    points: Sequence[Peak],
+    offtrail_factor: float = DIRECT_OFFTRAIL_FACTOR,
+) -> dict:
+    """Choose direct off-trail connectors without using reference geometry."""
+    if offtrail_factor < 1.0:
+        raise ValueError("direct off-trail factor must be at least 1.0")
+    if len(valhalla_route["legs"]) != len(points) - 1:
+        raise ValueError("waypoints do not match the Valhalla route")
+
+    legs = []
+    for index, valhalla_leg in enumerate(valhalla_route["legs"]):
+        origin = points[index]
+        destination = points[index + 1]
+        geometry = [(origin.lat, origin.lon), (destination.lat, destination.lon)]
+        direct_miles = haversine_miles(geometry[0], geometry[1])
+        estimated_offtrail_miles = direct_miles * offtrail_factor
+        use_valhalla = (
+            valhalla_leg["status"] == "ok"
+            and valhalla_leg["miles"] <= estimated_offtrail_miles
+        )
+        leg = {
+            "origin": origin.name,
+            "destination": destination.name,
+            "status": "ok",
+            "source": "valhalla" if use_valhalla else "direct-off-trail",
+            "miles": (
+                valhalla_leg["miles"]
+                if use_valhalla
+                else estimated_offtrail_miles
+            ),
+            "geometric_miles": (
+                valhalla_leg["miles"] if use_valhalla else direct_miles
+            ),
+            "geometry": (
+                valhalla_leg["geometry"] if use_valhalla else geometry
+            ),
+            "direct_miles": direct_miles,
+            "estimated_offtrail_miles": estimated_offtrail_miles,
+            "valhalla_miles": (
+                valhalla_leg["miles"] if valhalla_leg["status"] == "ok" else None
+            ),
+        }
+        if use_valhalla:
+            leg["warnings"] = valhalla_leg["warnings"]
+        legs.append(leg)
+
+    return {
+        "complete": True,
+        "total_miles": sum(leg["miles"] for leg in legs),
+        "geometric_miles": sum(leg["geometric_miles"] for leg in legs),
+        "direct_connector_count": sum(
+            leg["source"] == "direct-off-trail" for leg in legs
+        ),
+        "legs": legs,
+    }
+
+
 def total_miles_label(route: dict) -> str:
     """Format a complete total without presenting partial mileage as a total."""
     if not route["complete"]:
@@ -404,6 +464,13 @@ def main() -> int:
                 leg["miles"] - reference_leg["miles"]
             )
     routes["hybrid"] = hybrid_route(routes["standard"], reference_legs)
+    routes["direct-hybrid"] = direct_offtrail_route(
+        routes["standard"], standard_points
+    )
+    for leg, reference_leg in zip(
+        routes["direct-hybrid"]["legs"], reference_legs
+    ):
+        leg["reference_gpx_miles"] = reference_leg["miles"]
 
     results = {
         "configuration": {
@@ -413,6 +480,7 @@ def main() -> int:
             "max_hiking_difficulty": MAX_HIKING_DIFFICULTY,
             "max_distance_meters": MAX_DISTANCE_METERS,
             "gpx_alternative_penalty": GPX_ALTERNATIVE_PENALTY,
+            "direct_offtrail_factor": DIRECT_OFFTRAIL_FACTOR,
             "reference_gpx_sha256": hashlib.sha256(
                 args.reference_gpx.read_bytes()
             ).hexdigest(),
@@ -436,15 +504,24 @@ def main() -> int:
                 f" (effective {route['effective_miles']:.2f}; "
                 f"{route['gpx_alternative_count']} GPX alternatives)"
             )
+        elif route_name == "direct-hybrid":
+            summary += (
+                f" estimated (geometric {route['geometric_miles']:.2f}; "
+                f"{route['direct_connector_count']} direct connectors)"
+            )
         print(f"{route_name}: {summary}")
         for leg in route["legs"]:
             if leg["status"] == "ok":
                 comparison = (
                     f" (GPX {leg['reference_gpx_miles']:.2f})"
-                    if route_name in {"standard", "hybrid"}
+                    if route_name in {"standard", "hybrid", "direct-hybrid"}
                     else ""
                 )
-                source = f" [{leg['source']}]" if route_name == "hybrid" else ""
+                source = (
+                    f" [{leg['source']}]"
+                    if route_name in {"hybrid", "direct-hybrid"}
+                    else ""
+                )
                 print(
                     f"  {leg['origin']} -> {leg['destination']}: "
                     f"{leg['miles']:.2f}{comparison}{source}"

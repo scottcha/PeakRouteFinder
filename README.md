@@ -87,4 +87,4 @@ Verified examples with OR-Tools 9.15.6755:
 
 Phase 2 keeps distance acquisition behind the existing `DistanceProvider` seam. Trail support also needs unreachable-arc handling and provider-owned leg distances and geometry; the solver's two-phase objective remains unchanged.
 
-The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles; this route-specific evidence does not yet provide a general trail-distance provider.
+The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles; both remain evaluation models rather than general trail-distance providers.

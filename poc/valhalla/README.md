@@ -22,7 +22,7 @@ curl -fL \
   -o /tmp/peakroutefinder-valhalla/nolans-fkt.gpx
 ```
 
-Run the standard, Sherman-variant, and GPX-backed hybrid sequences:
+Run the standard, Sherman-variant, GPX-backed hybrid, and no-reference direct-hybrid sequences:
 
 ```bash
 .venv/bin/python -m peakroutefinder.poc.nolans \
@@ -49,6 +49,7 @@ The GPX comes from the [Fastest Known Time Nolan's route page](https://fastestkn
 | Hiking difficulty | 6, the most permissive `sac_scale` setting; this is a coverage POC, not a safety recommendation |
 | Maximum route distance | 250,000 meters, explicitly above Valhalla's 100,000-meter default |
 | GPX alternative penalty | 1.35× for candidate selection only; actual GPX mileage is still reported |
+| Direct off-trail factor | 1.65× direct haversine miles, calibrated against the GPX per-leg median of 1.643 |
 
 ## Results
 
@@ -60,9 +61,12 @@ Valhalla returned geometry for every requested leg. No leg failed, but many retu
 |---|---:|---:|---:|
 | Standard Nolan's, Blank Gulch to Fish Hatchery | 166.92 mi | 100.82 mi | +66.10 mi (+65.6%) |
 | GPX-backed hybrid, same endpoints | 104.01 mi | 100.82 mi | +3.19 mi (+3.2%) |
+| No-reference direct hybrid, same endpoints | 92.65 mi estimated | 100.82 mi | -8.17 mi (-8.1%) |
 | Sherman-to-Shavano variant, summit to summit | 166.39 mi | No matching GPX | Not compared |
 
 The hybrid selects each GPX leg when `GPX miles × 1.35 < Valhalla miles`, or when Valhalla fails. It uses **7 GPX alternatives**, retains Valhalla on 8 legs, and has **121.33 penalty-weighted miles**. Actual mileage remains the geometric distance of the selected path; the penalty affects only selection. The `gpx-alternative` source explicitly denotes whole-leg reference geometry; no segment-level off-trail classification is claimed.
+
+The no-reference direct hybrid constructs candidates only from waypoint coordinates and Valhalla results. It estimates each direct connector as `haversine miles × 1.65` and selects it when that estimate beats Valhalla, or when Valhalla fails. It uses **12 direct connectors**, retains Valhalla on Shavano-to-Tabeguache, Columbia-to-Harvard, and Oxford-to-Belford, and reports **92.65 estimated miles**. Its raw geometric total is **58.05 miles**. The GPX is used only to calibrate and score this heuristic, never to construct its candidates.
 
 The Sherman variant uses Sherman, Elbert, La Plata, Huron, Missouri, Belford, Oxford, Harvard, Columbia, Yale, Princeton, Antero, Tabeguache, and Shavano. It excludes trailhead approaches because its reference trailheads were not supplied.
 
@@ -73,6 +77,10 @@ Red is the 100.82-mile reference GPX; blue shows the 166.92-mile standard and 16
 ![GPX-backed hybrid compared with Valhalla and the reference GPX](hybrid-comparison.png)
 
 Green is the 104.01-mile hybrid, blue is the standard Valhalla route, and red is the reference GPX.
+
+![No-reference direct hybrid compared with Valhalla and the reference GPX](direct-hybrid-comparison.png)
+
+Green is the 92.65-mile estimated direct hybrid, blue is the standard Valhalla route, and red is the reference GPX. Straight green segments are candidate connectors, not terrain-derived walking paths.
 
 ### Standard-route legs
 
@@ -106,6 +114,6 @@ These connectors are included in Valhalla's reported distance. On the checked Co
 
 ## Verdict and next step
 
-**Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using the stock matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route. The GPX-backed hybrid reduces the gap to 3.19 miles, but it is anchored to one known line and does not establish a general distance provider for arbitrary peak lists.
+**Valhalla is a suitable routing API, but unmodified OSM is not a valid Nolan's distance matrix.** Using the stock matrix in CP-SAT would prove optimality for large detours, not for the Nolan's route. The GPX-backed hybrid reduces the gap to 3.19 miles, but it is anchored to one known line. The 1.65 direct heuristic removes that runtime dependency and estimates 92.65 miles, but its straight connectors remain terrain-blind approximations rather than a general trail-distance provider.
 
-The next POC should map-match the reference GPX with `trace_attributes` to distinguish absent ways from ways excluded by access or difficulty tags. That would split the current whole-leg GPX alternatives into granular mapped and off-trail segments suitable for a reviewed private OSM overlay. Until then, do not integrate the hybrid matrix into the general optimizer or label its output trail-optimal.
+The next POC should map-match the reference GPX with `trace_attributes` to distinguish absent ways from ways excluded by access or difficulty tags, and use DEM sampling to replace the global direct-mileage factor with terrain-aware distances and slope rejection. Until then, do not integrate either hybrid matrix into the general optimizer or label its output trail-optimal.
