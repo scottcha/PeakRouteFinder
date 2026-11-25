@@ -1,4 +1,4 @@
-"""Route standard and Sherman-variant Nolan's sequences through Valhalla."""
+"""Compare Valhalla and GPX-backed hybrid Nolan's route sequences."""
 
 import argparse
 import csv
@@ -17,6 +17,7 @@ EARTH_RADIUS_MILES = 3958.7613
 GPX_NAMESPACE = {"g": "http://www.topografix.com/GPX/1/1"}
 MAX_DISTANCE_METERS = 250_000
 MAX_HIKING_DIFFICULTY = 6
+GPX_OFFTRAIL_PENALTY = 1.35
 STANDARD_PEAK_NAMES = (
     "Mount Shavano",
     "Tabeguache Peak",
@@ -118,8 +119,8 @@ def path_miles(points: Sequence[Coordinate]) -> float:
 
 def reference_leg_miles(
     reference: Sequence[Coordinate], points: Sequence[Peak]
-) -> list[float]:
-    """Split a reference track at the nearest point to each route waypoint."""
+) -> list[dict]:
+    """Split a reference track into mileage and geometry between waypoints."""
     cumulative = [0.0]
     for origin, destination in zip(reference, reference[1:]):
         cumulative.append(cumulative[-1] + haversine_miles(origin, destination))
@@ -134,10 +135,22 @@ def reference_leg_miles(
     ]
     if indices != sorted(indices):
         raise ValueError("route waypoints do not follow the reference track order")
-    return [
-        cumulative[current] - cumulative[previous]
-        for previous, current in zip(indices, indices[1:])
-    ]
+    legs = []
+    for index, (previous, current) in enumerate(zip(indices, indices[1:])):
+        origin = points[index]
+        destination = points[index + 1]
+        geometry = [
+            (origin.lat, origin.lon),
+            *reference[previous + 1 : current],
+            (destination.lat, destination.lon),
+        ]
+        legs.append(
+            {
+                "miles": cumulative[current] - cumulative[previous],
+                "geometry": geometry,
+            }
+        )
+    return legs
 
 
 class ValhallaClient:
@@ -257,6 +270,63 @@ def route_sequence(client: ValhallaClient, points: Sequence[Peak]) -> dict:
     }
 
 
+def hybrid_route(
+    valhalla_route: dict,
+    reference_legs: Sequence[dict],
+    offtrail_penalty: float = GPX_OFFTRAIL_PENALTY,
+) -> dict:
+    """Choose between Valhalla and penalty-weighted GPX-backed connectors."""
+    if offtrail_penalty < 1.0:
+        raise ValueError("off-trail penalty must be at least 1.0")
+    if len(valhalla_route["legs"]) != len(reference_legs):
+        raise ValueError("reference legs do not match the Valhalla route")
+
+    legs = []
+    for valhalla_leg, reference_leg in zip(
+        valhalla_route["legs"], reference_legs
+    ):
+        gpx_miles = path_miles(reference_leg["geometry"])
+        gpx_effective_miles = gpx_miles * offtrail_penalty
+        use_valhalla = (
+            valhalla_leg["status"] == "ok"
+            and valhalla_leg["miles"] <= gpx_effective_miles
+        )
+        leg = {
+            "origin": valhalla_leg["origin"],
+            "destination": valhalla_leg["destination"],
+            "status": "ok",
+            "source": "valhalla" if use_valhalla else "gpx-backed-off-trail",
+            "miles": valhalla_leg["miles"] if use_valhalla else gpx_miles,
+            "effective_miles": (
+                valhalla_leg["miles"] if use_valhalla else gpx_effective_miles
+            ),
+            "geometry": (
+                valhalla_leg["geometry"]
+                if use_valhalla
+                else reference_leg["geometry"]
+            ),
+            "reference_gpx_miles": reference_leg["miles"],
+            "gpx_connector_miles": gpx_miles,
+            "gpx_effective_miles": gpx_effective_miles,
+            "valhalla_miles": (
+                valhalla_leg["miles"] if valhalla_leg["status"] == "ok" else None
+            ),
+        }
+        if use_valhalla:
+            leg["warnings"] = valhalla_leg["warnings"]
+        legs.append(leg)
+
+    return {
+        "complete": True,
+        "total_miles": sum(leg["miles"] for leg in legs),
+        "effective_miles": sum(leg["effective_miles"] for leg in legs),
+        "gpx_connector_count": sum(
+            leg["source"] == "gpx-backed-off-trail" for leg in legs
+        ),
+        "legs": legs,
+    }
+
+
 def total_miles_label(route: dict) -> str:
     """Format a complete total without presenting partial mileage as a total."""
     if not route["complete"]:
@@ -288,6 +358,7 @@ def geojson(routes: dict[str, dict], reference: Sequence[Coordinate]) -> dict:
                         "origin": leg["origin"],
                         "destination": leg["destination"],
                         "miles": leg["miles"],
+                        "source": leg.get("source", "valhalla"),
                     },
                     "geometry": {
                         "type": "LineString",
@@ -301,7 +372,7 @@ def geojson(routes: dict[str, dict], reference: Sequence[Coordinate]) -> dict:
 
 
 def main() -> int:
-    """Run both sequences and write raw JSON and GeoJSON comparisons."""
+    """Run all sequences and write raw JSON and GeoJSON comparisons."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--peaks", type=Path, default=Path("data/colorado_14ers.csv"))
     parser.add_argument("--reference-gpx", type=Path, required=True)
@@ -326,10 +397,13 @@ def main() -> int:
         "sherman-variant": route_sequence(client, variant_points),
     }
     reference_legs = reference_leg_miles(reference, standard_points)
-    for leg, reference_miles in zip(routes["standard"]["legs"], reference_legs):
-        leg["reference_gpx_miles"] = reference_miles
+    for leg, reference_leg in zip(routes["standard"]["legs"], reference_legs):
+        leg["reference_gpx_miles"] = reference_leg["miles"]
         if leg["status"] == "ok":
-            leg["minus_reference_miles"] = leg["miles"] - reference_miles
+            leg["minus_reference_miles"] = (
+                leg["miles"] - reference_leg["miles"]
+            )
+    routes["hybrid"] = hybrid_route(routes["standard"], reference_legs)
 
     results = {
         "configuration": {
@@ -338,6 +412,7 @@ def main() -> int:
             "shortest": True,
             "max_hiking_difficulty": MAX_HIKING_DIFFICULTY,
             "max_distance_meters": MAX_DISTANCE_METERS,
+            "gpx_offtrail_penalty": GPX_OFFTRAIL_PENALTY,
             "reference_gpx_sha256": hashlib.sha256(
                 args.reference_gpx.read_bytes()
             ).hexdigest(),
@@ -355,17 +430,24 @@ def main() -> int:
     )
 
     for route_name, route in routes.items():
-        print(f"{route_name}: {total_miles_label(route)}")
+        summary = total_miles_label(route)
+        if route_name == "hybrid":
+            summary += (
+                f" (effective {route['effective_miles']:.2f}; "
+                f"{route['gpx_connector_count']} GPX connectors)"
+            )
+        print(f"{route_name}: {summary}")
         for leg in route["legs"]:
             if leg["status"] == "ok":
                 comparison = (
                     f" (GPX {leg['reference_gpx_miles']:.2f})"
-                    if route_name == "standard"
+                    if route_name in {"standard", "hybrid"}
                     else ""
                 )
+                source = f" [{leg['source']}]" if route_name == "hybrid" else ""
                 print(
                     f"  {leg['origin']} -> {leg['destination']}: "
-                    f"{leg['miles']:.2f}{comparison}"
+                    f"{leg['miles']:.2f}{comparison}{source}"
                 )
             else:
                 print(
