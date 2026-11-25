@@ -54,6 +54,8 @@ python -m peakroutefinder <list.csv> --budget MILES
 python -m peakroutefinder data/colorado_14ers.csv --budget 100 --map colorado-route.html
 ```
 
+![Colorado 14ers optimal route with a 100-mile budget](docs/images/colorado-route.png)
+
 `--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks are numbered in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. Hover over points for names and coordinates. The route line includes waypoint legs.
 
 Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles.
