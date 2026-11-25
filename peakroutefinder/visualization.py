@@ -85,19 +85,20 @@ def build_map(peaks: Sequence[Peak], route: RouteResult) -> folium.Map:
             ).add_to(route_map)
             continue
 
-        number_icon = folium.DivIcon(
-            icon_size=(28, 28),
-            icon_anchor=(14, 14),
+        name_icon = folium.DivIcon(
+            icon_size=(180, 24),
+            icon_anchor=(-6, 12),
+            class_name="peak-name-label",
             html=(
-                f'<div style="width:26px;height:26px;border-radius:50%;'
-                f"background:{ROUTE_COLOR};color:white;border:1px solid white;"
-                f'font: bold 12px/26px sans-serif;text-align:center;">'
-                f"{position}</div>"
+                f'<div style="white-space:nowrap;background:#ffffffde;'
+                f"color:{ROUTE_COLOR};border-left:3px solid {ROUTE_COLOR};"
+                f'padding:2px 5px;font:bold 12px/18px sans-serif;">'
+                f"{position}. {escape(peak.name)}</div>"
             ),
         )
         folium.Marker(
             location=(peak.lat, peak.lon),
-            icon=number_icon,
+            icon=name_icon,
             tooltip=_point_label(peak),
         ).add_to(route_map)
 
@@ -106,19 +107,40 @@ def build_map(peaks: Sequence[Peak], route: RouteResult) -> folium.Map:
             [min(point.lat for point in bounds_points), min(point.lon for point in bounds_points)],
             [max(point.lat for point in bounds_points), max(point.lon for point in bounds_points)],
         ],
-        padding=(30, 30),
+        padding_top_left=(30, 30),
+        padding_bottom_right=(280, 30),
         max_zoom=14,
+    )
+    route_peaks = [
+        (position, point)
+        for position, point in enumerate(route.order, start=1)
+        if id(point) in peak_identities
+    ]
+    other_peaks = [peak for peak in peaks if id(peak) not in route_positions]
+    route_key_items = "".join(
+        f'<li value="{position}">{escape(point.name)}</li>'
+        for position, point in route_peaks
+    )
+    other_key_items = "".join(
+        f"<li>{escape(peak.name)}</li>" for peak in other_peaks
     )
     proof_label = "Proven optimal" if route.proven_optimal else "Best known route"
     legend = f"""
-    <div style="position:fixed;top:12px;right:12px;z-index:9999;background:white;
+    <div id="route-key" style="position:fixed;top:12px;right:12px;z-index:9999;
+                width:240px;max-height:calc(100vh - 48px);overflow-y:auto;background:white;
                 border:1px solid #d1d5db;border-radius:4px;padding:10px;
                 font:13px sans-serif;box-shadow:0 1px 4px #0003">
-      <strong>{proof_label}: {route.peak_count} peaks, {route.total_miles:.2f} miles</strong><br>
-      <span style="color:{ROUTE_COLOR}">●</span> Numbered route
-      &nbsp; <span style="color:{UNVISITED_COLOR}">●</span> Other listed peaks<br>
-      <span style="color:{START_COLOR}">●</span> Start
-      &nbsp; <span style="color:{END_COLOR}">●</span> End
+      <strong>{proof_label}: {route.peak_count} peaks, {route.total_miles:.2f} miles</strong>
+      <p style="margin:8px 0 4px"><strong>Route peaks (in order)</strong></p>
+      <ol style="margin:0;padding-left:24px">{route_key_items}</ol>
+      <details style="margin-top:8px">
+        <summary style="color:{UNVISITED_COLOR}">Other listed peaks ({len(other_peaks)})</summary>
+        <ul style="margin:4px 0;padding-left:24px">{other_key_items}</ul>
+      </details>
+      <div style="margin-top:8px">
+        <span style="color:{START_COLOR}">●</span> Start
+        &nbsp; <span style="color:{END_COLOR}">●</span> End
+      </div>
     </div>
     """
     route_map.get_root().html.add_child(folium.Element(legend))

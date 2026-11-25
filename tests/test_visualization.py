@@ -25,6 +25,12 @@ def test_map_contains_every_peak_in_route_order() -> None:
     assert route_line.locations == [[39.2, -106.2], [39.0, -106.0]]
     assert any(type(child) is folium.TileLayer for child in children)
     assert route_map.get_bounds() == [[39.0, -106.3], [39.3, -106.0]]
+    map_html = route_map.get_root().render()
+    assert "1. C" in map_html
+    assert "2. A" in map_html
+    assert 'id="route-key"' in map_html
+    assert '<li value="1">C</li><li value="2">A</li>' in map_html
+    assert "<li>B</li><li>D</li>" in map_html
 
 
 def test_map_distinguishes_start_and_end_waypoints() -> None:
