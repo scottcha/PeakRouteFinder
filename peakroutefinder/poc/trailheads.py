@@ -268,8 +268,14 @@ def main() -> int:
     matrix = json.loads(args.matrix.read_text(encoding="utf-8"))
     if matrix["configuration"]["peaks_sha256"] != peaks_sha256:
         raise ValueError("peak matrix was built from a different CSV")
+    if not matrix["configuration"].get("exact_endpoint_connectors"):
+        raise ValueError(
+            "peak matrix lacks exact endpoint connector mileage; "
+            "rerun peakroutefinder.poc.optimize"
+        )
     configuration = {
         "peaks_sha256": peaks_sha256,
+        "exact_endpoint_connectors": True,
         "pbf_sha256": hashlib.sha256(args.pbf.read_bytes()).hexdigest(),
         "dem_zoom": args.dem_zoom,
         "dem_grid_stride": GRID_STRIDE,

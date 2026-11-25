@@ -262,9 +262,28 @@ class ValhallaClient:
                 if not isinstance(response, dict):
                     raise RuntimeError("Valhalla returned an invalid matrix response")
                 rows = response["sources_to_targets"]
-                if len(rows) != 1 or len(rows[0]) != len(batch):
+                snapped_sources = response.get("sources")
+                snapped_targets = response.get("targets")
+                if (
+                    len(rows) != 1
+                    or len(rows[0]) != len(batch)
+                    or not isinstance(snapped_sources, list)
+                    or len(snapped_sources) != 1
+                    or not isinstance(snapped_targets, list)
+                    or len(snapped_targets) != len(batch)
+                ):
                     raise RuntimeError("Valhalla returned an incomplete distance row")
-                for destination_index, result in zip(batch, rows[0]):
+                snapped_origin = snapped_sources[0]
+                origin_snap_miles = haversine_miles(
+                    (origin.lat, origin.lon),
+                    (snapped_origin["lat"], snapped_origin["lon"]),
+                )
+                for destination_index, result, snapped_destination in zip(
+                    batch, rows[0], snapped_targets
+                ):
+                    if origin_index == destination_index:
+                        distances[origin_index][destination_index] = 0.0
+                        continue
                     distance = result["distance"]
                     if distance is None:
                         over_limit_miles = (
@@ -279,6 +298,18 @@ class ValhallaClient:
                                 f"to {points[destination_index].name}"
                             )
                         distance = over_limit_miles
+                    else:
+                        destination_snap_miles = haversine_miles(
+                            (
+                                points[destination_index].lat,
+                                points[destination_index].lon,
+                            ),
+                            (
+                                snapped_destination["lat"],
+                                snapped_destination["lon"],
+                            ),
+                        )
+                        distance += origin_snap_miles + destination_snap_miles
                     distances[origin_index][destination_index] = float(distance)
         return distances
 
@@ -303,12 +334,27 @@ class ValhallaClient:
         trip = response["trip"]
         if len(trip["legs"]) != 1:
             raise RuntimeError("expected exactly one Valhalla leg")
+        geometry = decode_polyline(trip["legs"][0]["shape"])
+        origin_snap_miles = haversine_miles(
+            (origin.lat, origin.lon), geometry[0]
+        )
+        destination_snap_miles = haversine_miles(
+            (destination.lat, destination.lon), geometry[-1]
+        )
+        if origin_snap_miles:
+            geometry.insert(0, (origin.lat, origin.lon))
+        if destination_snap_miles:
+            geometry.append((destination.lat, destination.lon))
         return {
             "origin": origin.name,
             "destination": destination.name,
             "status": "ok",
-            "miles": trip["summary"]["length"],
-            "geometry": decode_polyline(trip["legs"][0]["shape"]),
+            "miles": (
+                trip["summary"]["length"]
+                + origin_snap_miles
+                + destination_snap_miles
+            ),
+            "geometry": geometry,
             "warnings": trip.get("warnings", []),
         }
 

@@ -146,15 +146,15 @@ All listed solves reached `OPTIMAL` in both CP-SAT phases. Mileage is the cheape
 
 | Budget | Proven maximum fourteeners | Cheapest maximum-count route |
 |---:|---:|---:|
-| 90 mi | 15 | 85.25 mi |
-| 100 mi | **17** | **97.26 mi** |
-| 105 mi | 18 | 102.97 mi |
-| 110 mi | 19 | 109.13 mi |
-| 120 mi | 19 | 109.13 mi |
+| 90 mi | 15 | 85.26 mi |
+| 100 mi | **17** | **97.29 mi** |
+| 105 mi | 18 | 102.99 mi |
+| 110 mi | 19 | 109.15 mi |
+| 120 mi | 19 | 109.15 mi |
 
-At 100 miles, the exact upper bound is **17 peaks**: this matrix contains no 18-peak route, and therefore no route beating the haversine model's 20-peak result. The 100-mile route is Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Sherman → Democrat → Lincoln → Bross. It uses 12 DEM legs and 4 Valhalla legs. Every reported leg uses its exact matrix mileage and sums to 97.263 miles; separate Valhalla route calls supply geometry only.
+At 100 miles, the exact upper bound is **17 peaks**: this matrix contains no 18-peak route, and therefore no route beating the haversine model's 20-peak result. The 100-mile route is Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Sherman → Democrat → Lincoln → Bross. It uses 12 DEM legs and 4 Valhalla legs. Every reported leg uses its exact matrix mileage and sums to 97.285 miles; separate Valhalla route calls supply geometry only.
 
-An 18th peak becomes possible at 102.97 miles by adding Massive; a 19th becomes possible at 109.13 miles by adding Quandary. The maximum remains 19 at 120 miles. These are matrix results, not proof that no real-world terrain route exists beyond the evaluated DEM cutoff.
+An 18th peak becomes possible at 102.99 miles by adding Massive; a 19th becomes possible at 109.15 miles by adding Quandary. The maximum remains 19 at 120 miles. These are matrix results, not proof that no real-world terrain route exists beyond the evaluated DEM cutoff.
 
 ## Trailhead-inclusive optimization
 
@@ -168,14 +168,16 @@ python -m peakroutefinder.poc.trailheads \
 
 The POC reads every `highway=trailhead` node from the pinned Colorado OSM PBF, preserves its OSM ID, and assigns each peak its nearest trailhead by haversine distance. For every possible first and last peak, directed approach and return connectors use the shorter actual path from Valhalla or DEM. CP-SAT charges those connectors on its depot arcs, so the 100-mile budget includes getting from a trailhead to the first summit and from the last summit to a trailhead. The solver chooses the endpoints and summit order jointly rather than attaching approaches to the prior answer.
 
+Valhalla can snap an input summit or trailhead to a nearby mapped edge. Every Valhalla matrix arc and returned leg therefore includes straight haversine connectors from the exact input coordinates to those snapped endpoints. The geometry includes the same connectors, and DEM paths already start and end at the exact coordinates.
+
 ### 100-mile result
 
-CP-SAT proved a maximum of **15 peaks** with a cheapest maximum-count route of **90.106964 miles**. No 16-peak route fits within 100 miles under this terminal-cost model.
+CP-SAT proved a maximum of **15 peaks** with a cheapest maximum-count route of **90.126929 miles**. No 16-peak route fits within 100 miles under this terminal-cost model. Every one of the 32 leg endpoints exactly equals its summit or trailhead input coordinate.
 
 The route starts at **Denny Creek Trailhead**, visits Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Massive → Sherman → Democrat → Bross → Lincoln → Quandary, and ends at **Upper Blue Lakes Trailhead**. The opening Denny Creek→Yale connector is 3.124 miles and the closing Quandary→Upper Blue Lakes connector is 1.738 miles. The complete 16-leg route uses 14 DEM connectors and 2 Valhalla connectors; all 106 candidate terminal connectors succeeded without DEM errors.
 
 ![Standard Nolan's versus the trailhead-inclusive 15-peak optimum, with numbered peaks and a name key](standard-vs-optimal-100.png)
 
-Red is the standard 14-peak reference GPX (100.82 miles); green is the trailhead-inclusive 15-peak optimum (90.11 miles). Both totals include approaches. Numbers follow the standard sequence, with 15–19 marking optimizer additions. The key identifies Shavano, Tabeguache, Antero, and Princeton as standard-only, and labels the selected start (S) and end (E) trailheads.
+Red is the standard 14-peak reference GPX (100.82 miles); green is the trailhead-inclusive 15-peak optimum (90.13 miles). Both totals include approaches. Numbers follow the standard sequence, with 15–19 marking optimizer additions. The key identifies Shavano, Tabeguache, Antero, and Princeton as standard-only, and labels the selected start (S) and end (E) trailheads.
 
 This model uses the nearest tagged OSM trailhead, not necessarily the standard or safest access for a summit. Unmapped trailheads and OSM tagging gaps remain data limitations. Optimality applies to those nearest-trailhead choices and the bounded hybrid matrix.

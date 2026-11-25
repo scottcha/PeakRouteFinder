@@ -222,6 +222,7 @@ def main() -> int:
     peaks = load_peaks(args.peaks)
     configuration = {
         "peaks_sha256": hashlib.sha256(args.peaks.read_bytes()).hexdigest(),
+        "exact_endpoint_connectors": True,
         "valhalla_max_haversine": VALHALLA_MAX_HAVERSINE_MILES,
         "dem_zoom": args.dem_zoom,
         "dem_grid_stride": GRID_STRIDE,
