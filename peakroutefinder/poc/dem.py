@@ -138,7 +138,9 @@ class TerrariumProvider:
                 with urllib.request.urlopen(request, timeout=self.timeout) as response:
                     payload = response.read()
             except (urllib.error.URLError, TimeoutError) as error:
-                raise RuntimeError(f"DEM tile download failed at {x}/{y}: {error}") from error
+                raise RuntimeError(
+                    f"DEM tile download failed at {x}/{y}: {error}"
+                ) from error
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(payload)
         with Image.open(BytesIO(payload)) as image:
@@ -148,7 +150,9 @@ class TerrariumProvider:
             or np.any(elevations < MIN_VALID_ELEVATION_METERS)
             or np.any(elevations > MAX_VALID_ELEVATION_METERS)
         ):
-            raise RuntimeError(f"DEM tile contains void or invalid elevations at {x}/{y}")
+            raise RuntimeError(
+                f"DEM tile contains void or invalid elevations at {x}/{y}"
+            )
         return elevations
 
     def grid(self, origin: Peak, destination: Peak) -> DemGrid:
