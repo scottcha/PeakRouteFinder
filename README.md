@@ -54,13 +54,17 @@ python -m peakroutefinder <list.csv> --budget MILES
 python -m peakroutefinder data/colorado_14ers.csv --budget 100 --map colorado-route.html
 ```
 
-![Colorado 14ers optimal route with a 100-mile budget](docs/images/colorado-route.png)
-
 `--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks have name labels in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. The key lists route peaks in order and includes a collapsible list of the other listed peaks. Hover over points for names and coordinates. The route line includes waypoint legs.
 
 Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles.
 
 Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
+
+### Nolan's 14 trailhead-inclusive route
+
+![Nolan's 14 trailhead-inclusive optimal route with numbered peaks and a name key](docs/images/colorado-route.png)
+
+The final 14-peak, 96.43-mile Nolan route uses 13 GPX-backed legs and two DEM approaches. It is produced by the [Nolan's Valhalla POC](poc/valhalla/README.md), not the haversine `--map` example above.
 
 ## How the proof works
 
@@ -104,4 +108,4 @@ The speedups do not weaken the optimality claim: a result is reported as proven 
 
 Phase 2 keeps distance acquisition behind the existing `DistanceProvider` seam. Trail support also needs unreachable-arc handling and provider-owned leg distances and geometry; the solver's two-phase objective remains unchanged.
 
-The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles. DEM-aware A* replaces straight candidates with terrain paths and measures 91.07 miles using eight DEM connectors; all remain evaluation models rather than general trail-distance providers. Applying the exact optimizer to a 53-peak Valhalla+DEM matrix proves a 17-peak, 97.29-mile maximum at a 100-mile budget; an 18th peak requires 102.99 miles within that matrix. Charging nearest-OSM-trailhead approaches and returns inside the same budget proves a 15-peak, 90.13-mile optimum from Denny Creek Trailhead to Upper Blue Lakes Trailhead, with geometry touching every exact summit coordinate. Anchoring all 91 standard Nolan pairs with cumulative known-GPX distances proves a 14-peak, 96.43-mile maximum; the winning route is the standard 14 summits in standard order with 13 GPX-backed summit legs and two DEM trailhead approaches. The same model proves 8 peaks at 47.66 miles under a 50-mile budget and 5 peaks at 17.02 miles under a 25-mile budget.
+The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles. DEM-aware A* replaces straight candidates with terrain paths and measures 91.07 miles using eight DEM connectors; all remain evaluation models rather than general trail-distance providers. Applying the exact optimizer to a 53-peak Valhalla+DEM matrix proves a 17-peak, 97.29-mile maximum at a 100-mile budget; an 18th peak requires 102.99 miles within that matrix. Charging nearest-OSM-trailhead approaches and returns inside the same budget proves a 15-peak, 90.13-mile optimum from Denny Creek Trailhead to Upper Blue Lakes Trailhead, with geometry touching every exact summit coordinate. Anchoring all 91 standard Nolan pairs with cumulative known-GPX distances proves a 14-peak, 96.43-mile maximum; the winning route is the standard 14 summits in standard order with 13 GPX-backed summit legs and two DEM trailhead approaches. The same model proves 8 peaks at 47.66 miles under a 50-mile budget and 5 peaks at 17.02 miles under a 25-mile budget. The [Washington top-100 POC](poc/washington/README.md) applies the Valhalla+DEM model without GPX overrides and proves 29 peaks at 98.40 miles, 16 at 48.27 miles, and 9 at 21.70 miles for 100-, 50-, and 25-mile budgets respectively.
