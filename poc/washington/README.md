@@ -6,7 +6,7 @@ Unlike the Nolan results, Washington has no reference GPX input. Distances come 
 
 ## Optimal budget routes
 
-All three solves returned `OPTIMAL` in both phases and proved that one additional peak cannot fit the budget. Every leg touches the exact summit or trailhead coordinates.
+All three solves returned `OPTIMAL` in both phases and proved that no route with more peaks exists within the budget. Every leg touches the exact summit or trailhead coordinates.
 
 | Budget | Proven maximum peaks | Cheapest maximum-count route | Valhalla legs | DEM legs |
 |---:|---:|---:|---:|---:|
@@ -16,7 +16,7 @@ All three solves returned `OPTIMAL` in both phases and proved that one additiona
 
 ![Twenty-nine-peak Washington route optimized for 100 miles](optimal-100.png)
 
-The 100-mile route runs from **Easy Pass Trailhead to Cloudy Pass Trailhead** through Mesahchie, Katsuk, Kimtah, Cosho, Primus, Austera, Klawatti, Dorado Needle, Eldorado, Forbidden, Boston, Sahale, Horseshoe, Buckner, Storm King, Goode, Tupshin, Devore, Martin, Bonanza, Dark, Chiwawa, Fortress, Greenwood, Dumbell, Maude, Seven Fingered Jack, Fernow, and Copper.
+The 100-mile route runs from **Easy Pass Trailhead to Cloudy Pass Trailhead** through Mesahchie, Katsuk, Kimtah, Cosho, Primus, Austera, Klawatti, Dorado Needle, Eldorado, Forbidden, Boston, Sahale, Horseshoe, Buckner, Storm King, Goode, Tupshin, Devore, Martin Peak (48.241679, −120.815844), Bonanza, Dark, Chiwawa, Fortress, Greenwood, Dumbell, Maude, Seven Fingered Jack, Fernow, and Copper.
 
 ![Sixteen-peak Washington route optimized for 50 miles](optimal-50.png)
 
@@ -59,6 +59,6 @@ python -m peakroutefinder.poc.trailheads \
 
 Repeat the trailhead command with `--budget 50` and `--budget 25`, using separate output directories. Each budget uses two CP-SAT phases: prove the maximum peak count, then minimize mileage at that fixed count. A result is reported as proven only when both phases return `OPTIMAL`.
 
-The recorded 100-by-100 matrix attempted DEM A* for 1,464 short-range directed candidates and produced 1,408 terrain connectors; Valhalla covered the remaining candidates. The peak-only 100-mile solve proved a 32-peak, 97.27-mile optimum before trailhead costs.
+The recorded 100-by-100 matrix attempted DEM A* for 1,464 short-range directed candidates and used terrain paths for 1,408 of them where DEM beat Valhalla; the remaining candidates used Valhalla. The peak-only 100-mile solve proved a 32-peak, 97.27-mile optimum before trailhead costs.
 
 Basemaps in the route images use Esri World Topo.

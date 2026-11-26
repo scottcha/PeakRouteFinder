@@ -54,13 +54,17 @@ python -m peakroutefinder <list.csv> --budget MILES
 python -m peakroutefinder data/colorado_14ers.csv --budget 100 --map colorado-route.html
 ```
 
-![Nolan's 14 trailhead-inclusive optimal route with numbered peaks and a name key](docs/images/colorado-route.png)
-
-The image above shows the final 14-peak, 96.43-mile Nolan route with 13 GPX-backed legs and two DEM approaches. `--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks have name labels in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. The key lists route peaks in order and includes a collapsible list of the other listed peaks. Hover over points for names and coordinates. The route line includes waypoint legs.
+`--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks have name labels in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. The key lists route peaks in order and includes a collapsible list of the other listed peaks. Hover over points for names and coordinates. The route line includes waypoint legs.
 
 Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles.
 
 Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
+
+### Nolan's 14 trailhead-inclusive route
+
+![Nolan's 14 trailhead-inclusive optimal route with numbered peaks and a name key](docs/images/colorado-route.png)
+
+The final 14-peak, 96.43-mile Nolan route uses 13 GPX-backed legs and two DEM approaches. It is produced by the [Nolan's Valhalla POC](poc/valhalla/README.md), not the haversine `--map` example above.
 
 ## How the proof works
 
