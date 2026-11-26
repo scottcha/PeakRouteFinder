@@ -1,8 +1,25 @@
 # PeakRouteFinder
 
-PeakRouteFinder answers the Nolan's 14-style question: **what is the largest number of peaks you can traverse within a mileage budget?** It uses an exact OR-Tools CP-SAT model, so a successful run proves that no route with more peaks exists and that the selected route has the lowest mileage at that peak count.
+PeakRouteFinder finds the largest number of peaks that fit within a mileage budget and proves that no route with more peaks exists. It uses an exact OR-Tools CP-SAT model, then minimizes mileage at that maximum peak count.
 
-The current distance model is straight-line haversine mileage. Optional start and end coordinates represent trailheads, and their travel legs count toward the budget.
+The original question was **Nolan's 14**: how many Colorado fourteeners could you climb in under 100 miles? The engine also accepts arbitrary peak lists and optional start and end trailheads.
+
+## Nolan's 14 results
+
+Two distance models answer different questions:
+
+| Model | Budget | Peaks | Miles | Scope |
+|---|---:|---:|---:|---|
+| Straight-line haversine | 100 mi | **20** | **97.84** | Any 20 of Colorado's 53 fourteeners; no trailhead costs |
+| GPX-anchored Valhalla+DEM | 100 mi | **14** | **96.43** | The standard Nolan's summits, including trailhead approaches |
+
+The 20-peak result is a mathematical optimum for straight-line distances, not a feasible hiking route. It demonstrates the optimizer without claiming to solve Nolan's under real trail conditions.
+
+The 14-peak result is the exact optimum for the GPX-anchored matrix. Its 13 summit-to-summit legs follow the known Nolan's GPX in standard order. Two DEM-modeled approaches connect Mount Shavano Trailhead and North Halfmoon Lakes Trailhead, bringing the total to **96.433290 miles**. No 15-peak route fits within 100 miles in that matrix. The approaches and matrix are not field-validated.
+
+![Nolan's 14 trailhead-inclusive optimal route with numbered peaks and a name key](docs/images/colorado-route.png)
+
+See the [Nolan's 14 routing POC](poc/valhalla/README.md) for the route, data provenance, model limits, and reproduction commands.
 
 ## Quick start
 
@@ -16,7 +33,7 @@ pytest -q
 python -m peakroutefinder data/colorado_14ers.csv --budget 100
 ```
 
-The final command prints `PROVEN OPTIMAL`, a 20-peak route, its 97.84-mile total, each leg, and the complete visit order.
+The final command prints `PROVEN OPTIMAL`, the 20-peak route, its 97.84-mile total, each leg, and the complete visit order. This quick start uses haversine distance.
 
 Add arbitrary trailheads with comma-separated latitude and longitude:
 
@@ -25,7 +42,7 @@ python -m peakroutefinder data/colorado_14ers.csv --budget 100 \
     --start "39.4718,-106.0975" --end "39.0046,-106.3706"
 ```
 
-Omit `--end` for an open route beginning at the start waypoint. Omit both waypoints to optimize only the supplied peak list.
+This example proves a 16-peak, 92.32-mile optimum. Omit `--end` for an open route beginning at the start waypoint. Omit both waypoints to optimize only the supplied peak list.
 
 ## Input and output
 
@@ -48,6 +65,8 @@ python -m peakroutefinder <list.csv> --budget MILES
 
 `--time-limit` applies separately to each solve phase and defaults to 120 seconds. `--workers` defaults to the smaller of 16 and the available CPU count. `--out` writes `order,peak,leg_miles` rows and replaces an existing file.
 
+Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
+
 ### Route maps
 
 ```bash
@@ -56,15 +75,18 @@ python -m peakroutefinder data/colorado_14ers.csv --budget 100 --map colorado-ro
 
 `--map` writes an interactive HTML map with an Esri WorldTopoMap basemap fitted to the input list. Every listed peak appears: visited peaks have name labels in route order, unvisited peaks are gray, and optional start/end waypoints are green/red. The key lists route peaks in order and includes a collapsible list of the other listed peaks. Hover over points for names and coordinates. The route line includes waypoint legs.
 
-Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles.
+Open the HTML file in a browser. Internet access is required to load the Leaflet assets and Esri basemap tiles. These CLI maps draw straight-line haversine routes; they do not show the GPX/DEM geometry used by the Nolan's POC.
 
-Exit codes are 0 for success, 1 for usage or loading errors, 2 when either solve phase reaches its time limit, and 3 when no feasible route exists. A timeout reports the best route found and the proven peak-count bound without claiming optimality.
+## Beyond Colorado's fourteeners
 
-### Nolan's 14 trailhead-inclusive route
+The same solver supports other lists and distance matrices. Detailed routes, maps, and reproduction commands live with each experiment.
 
-![Nolan's 14 trailhead-inclusive optimal route with numbered peaks and a name key](docs/images/colorado-route.png)
-
-The final 14-peak, 96.43-mile Nolan route uses 13 GPX-backed legs and two DEM approaches. It is produced by the [Nolan's Valhalla POC](poc/valhalla/README.md), not the haversine `--map` example above.
+| Experiment | Distance model | Budget | Proven maximum | Miles |
+|---|---|---:|---:|---:|
+| [Colorado top 100 13ers + 14ers](poc/colorado-centennial/README.md) | Haversine | 100 mi | **35 peaks** | **97.02** |
+| [Colorado top 100 13ers + 14ers](poc/colorado-centennial/README.md) | GPX-anchored Valhalla+DEM | 100 mi | **27 peaks** | **99.85** |
+| [Washington top 100](poc/washington/README.md) | Haversine | 60 mi | **27 peaks** | **57.50** |
+| [Washington top 100](poc/washington/README.md) | Valhalla+DEM | 100 mi | **29 peaks** | **98.40** |
 
 ## How the proof works
 
@@ -72,40 +94,26 @@ Peaks and waypoints become nodes in a CP-SAT circuit. Each unvisited node takes 
 
 The first phase maximizes the number of visited peaks. The second rebuilds the model, fixes that count, and minimizes total mileage. `PROVEN OPTIMAL` requires both phases to finish with CP-SAT status `OPTIMAL`.
 
-The proof applies to the supplied distance matrix. Straight-line distances are not trail distances, so the current results should not be interpreted as real-world route feasibility.
-
-Verified examples with OR-Tools 9.15.6755:
-
-| Instance | Budget | Peaks | Miles | Result |
-|---|---:|---:|---:|---|
-| Colorado 53 | 100 mi | 20 | 97.84 | Proven optimal |
-| Colorado 53, start and end | 100 mi | 16 | 92.32 | Proven optimal |
-| Washington top 100 | 60 mi | 27 | 57.50 | Proven optimal |
+The proof applies to the supplied distance matrix. It does not upgrade approximate or incomplete distances into a real-world feasibility claim.
 
 ## Why the optimizer is fast
 
-The routing POC keeps exact search separate from distance acquisition so CP-SAT operates on a small numeric model rather than performing terrain or network work during the search.
+Exact search is separate from distance acquisition, so CP-SAT operates on a numeric matrix rather than performing terrain or network work during the search.
 
 | Optimization | Effect |
 |---|---|
-| CP-SAT circuit model | Uses OR-Tools' C++ branch-and-cut engine instead of exponential DFS enumeration. Self-loop arcs skip unvisited peaks and one circuit represents the selected route. |
-| Precomputed distance matrix | Builds the 53-peak matrix once, then solves without network, GPX, or DEM calls. |
-| Selective DEM routing | Attempts DEM A* for 202 of 2,756 directed peak pairs within the 15-mile haversine cutoff; 190 routed successfully, and Valhalla handles the remaining candidates. |
-| Two-phase objective | First proves the maximum peak count, then fixes that count and minimizes mileage. This avoids weighted-objective tradeoffs. |
-| Precomputed terminal connectors | Calculates 106 directed trailhead candidates and charges only the selected start/end connectors on CP-SAT's depot arcs. |
-| GPX anchoring | Precomputes cumulative distance and continuous geometry for all 91 standard Nolan pairs in both directions. |
-| Configuration-aware caching | Reuses DEM tiles, matrices, and connectors while hashes match; exact-endpoint model changes invalidate stale caches. |
-| Bounded parallel search | Uses integer milli-mile costs, up to 16 CP-SAT workers, and explicit time limits. |
+| CP-SAT circuit model | Uses OR-Tools' C++ engine instead of exhaustive DFS enumeration. |
+| Precomputed distance matrix | Builds each matrix once and reuses it during both solve phases. |
+| Two-phase objective | Proves the maximum peak count before minimizing mileage, avoiding weighted-objective tradeoffs. |
+| Bounded parallel search | Uses integer milli-mile costs, up to 16 workers, and explicit time limits. |
 
-The speedups do not weaken the optimality claim: a result is reported as proven only when both CP-SAT phases return `OPTIMAL`. Distance realism is a separate concern controlled by the chosen Valhalla, DEM, and GPX inputs.
+The routing POCs add matrix caching, selective DEM routing, terminal connectors, and GPX anchoring. Their READMEs document those experiment-specific optimizations.
 
-## Roadmap
+## Development status
 
-| Phase | Scope | Estimated effort | Status |
-|---|---|---|---|
-| 1. Engine core | CLI, list loading, distance matrix, exact two-phase solve | One sitting | Implemented and verified |
-| 2. Real geometry | Valhalla table service or a precomputed CSV matrix | Days, including external data preparation | POC complete; Nolan's connector curation required |
+| Phase | Scope | Status |
+|---|---|---|
+| Engine core | CLI, list loading, haversine matrix, exact two-phase solve | Implemented and verified |
+| Real geometry | Valhalla, DEM, and GPX experiments behind the `DistanceProvider` seam | POCs complete; general provider integration remains |
 
-Phase 2 keeps distance acquisition behind the existing `DistanceProvider` seam. Trail support also needs unreachable-arc handling and provider-owned leg distances and geometry; the solver's two-phase objective remains unchanged.
-
-The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles. DEM-aware A* replaces straight candidates with terrain paths and measures 91.07 miles using eight DEM connectors; all remain evaluation models rather than general trail-distance providers. Applying the exact optimizer to a 53-peak Valhalla+DEM matrix proves a 17-peak, 97.29-mile maximum at a 100-mile budget; an 18th peak requires 102.99 miles within that matrix. Charging nearest-OSM-trailhead approaches and returns inside the same budget proves a 15-peak, 90.13-mile optimum from Denny Creek Trailhead to Upper Blue Lakes Trailhead, with geometry touching every exact summit coordinate. Anchoring all 91 standard Nolan pairs with cumulative known-GPX distances proves a 14-peak, 96.43-mile maximum; the winning route is the standard 14 summits in standard order with 13 GPX-backed summit legs and two DEM trailhead approaches. The same model proves 8 peaks at 47.66 miles under a 50-mile budget and 5 peaks at 17.02 miles under a 25-mile budget. The [Washington top-100 POC](poc/washington/README.md) applies the Valhalla+DEM model without GPX overrides and proves 29 peaks at 98.40 miles, 16 at 48.27 miles, and 9 at 21.70 miles for 100-, 50-, and 25-mile budgets respectively.
+The production CLI currently uses haversine distances. Real-geometry results remain POC-specific until unreachable arcs, provider-owned geometry, coverage limits, and trailhead selection are handled by a general provider.
