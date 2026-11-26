@@ -209,6 +209,10 @@ The same all-pairs anchored model produces these exact maxima. Both solves prove
 | 50 mi | **8** | **47.662510 mi** | 7 | 2 |
 | 25 mi | **5** | **17.015701 mi** | 0 | 6 |
 
+![Eight-peak route optimized for a 50-mile budget](optimal-50-gpx-continuous.png)
+
+![Five-peak route optimized for a 25-mile budget](optimal-25-gpx-continuous.png)
+
 The 50-mile route is **Mount Elbert Trailhead → La Plata → Huron → Missouri → Belford → Oxford → Harvard → Columbia → Yale → Denny Creek Trailhead**. Its seven summit-to-summit legs use the known GPX; only the two approaches use DEM.
 
 The 25-mile route is **Willow Creek Trailhead → Crestone Peak → Crestone Needle → Humboldt Peak → Kit Carson Mountain → Challenger Point → Willow Creek Trailhead**. It has 12 exact leg endpoints, but all six legs are DEM-based because the Crestone group is outside the standard Nolan GPX. Its mileage is therefore an exact matrix optimum, not a known-GPX-validated field route.
