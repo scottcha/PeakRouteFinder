@@ -2,7 +2,7 @@
 
 PeakRouteFinder finds the largest number of peaks that fit within a mileage budget and proves that no route with more peaks exists. It uses an exact OR-Tools CP-SAT model, then minimizes mileage at that maximum peak count.
 
-The original question was **Nolan's 14**: what is the optimal route through Colorado's fourteeners? The engine also accepts arbitrary peak lists and optional start and end trailheads.
+The original question was **Nolan's 14**: how many Colorado fourteeners could you climb in under 100 miles? The engine also accepts arbitrary peak lists and optional start and end trailheads.
 
 ## Nolan's 14 results
 
