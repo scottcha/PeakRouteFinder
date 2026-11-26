@@ -78,6 +78,23 @@ Verified examples with OR-Tools 9.15.6755:
 | Colorado 53, start and end | 100 mi | 16 | 92.32 | Proven optimal |
 | Washington top 100 | 60 mi | 27 | 57.50 | Proven optimal |
 
+## Why the optimizer is fast
+
+The routing POC keeps exact search separate from distance acquisition so CP-SAT operates on a small numeric model rather than performing terrain or network work during the search.
+
+| Optimization | Effect |
+|---|---|
+| CP-SAT circuit model | Uses OR-Tools' C++ branch-and-cut engine instead of exponential DFS enumeration. Self-loop arcs skip unvisited peaks and one circuit represents the selected route. |
+| Precomputed distance matrix | Builds the 53-peak matrix once, then solves without network, GPX, or DEM calls. |
+| Selective DEM routing | Attempts DEM A* for 202 of 2,756 directed peak pairs within the 15-mile haversine cutoff; 190 routed successfully, and Valhalla handles the remaining candidates. |
+| Two-phase objective | First proves the maximum peak count, then fixes that count and minimizes mileage. This avoids weighted-objective tradeoffs. |
+| Precomputed terminal connectors | Calculates 106 directed trailhead candidates and charges only the selected start/end connectors on CP-SAT's depot arcs. |
+| GPX anchoring | Precomputes cumulative distance and continuous geometry for all 91 standard Nolan pairs in both directions. |
+| Configuration-aware caching | Reuses DEM tiles, matrices, and connectors while hashes match; exact-endpoint model changes invalidate stale caches. |
+| Bounded parallel search | Uses integer milli-mile costs, up to 16 CP-SAT workers, and explicit time limits. |
+
+The speedups do not weaken the optimality claim: a result is reported as proven only when both CP-SAT phases return `OPTIMAL`. Distance realism is a separate concern controlled by the chosen Valhalla, DEM, and GPX inputs.
+
 ## Roadmap
 
 | Phase | Scope | Estimated effort | Status |
@@ -87,4 +104,4 @@ Verified examples with OR-Tools 9.15.6755:
 
 Phase 2 keeps distance acquisition behind the existing `DistanceProvider` seam. Trail support also needs unreachable-arc handling and provider-owned leg distances and geometry; the solver's two-phase objective remains unchanged.
 
-The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles. DEM-aware A* replaces straight candidates with terrain paths and measures 91.07 miles using eight DEM connectors; all remain evaluation models rather than general trail-distance providers. Applying the exact optimizer to a 53-peak Valhalla+DEM matrix proves a 17-peak, 97.29-mile maximum at a 100-mile budget; an 18th peak requires 102.99 miles within that matrix. Charging nearest-OSM-trailhead approaches and returns inside the same budget proves a 15-peak, 90.13-mile optimum from Denny Creek Trailhead to Upper Blue Lakes Trailhead, with geometry touching every exact summit coordinate. Anchoring all 91 standard Nolan pairs with cumulative known-GPX distances proves a 14-peak, 96.43-mile maximum; the winning route is the standard 14 summits in standard order with 13 GPX-backed summit legs and two DEM trailhead approaches.
+The [Nolan's Valhalla POC](poc/valhalla/README.md) provides a reproducible local router and GPX comparison. Stock OSM routed every requested leg but produced 166.92 miles versus the reference GPX's 100.82 miles. A POC-only hybrid using seven penalty-weighted GPX-backed connectors measures 104.01 miles. A no-reference heuristic using twelve direct connectors at 1.65× haversine estimates 92.65 miles. DEM-aware A* replaces straight candidates with terrain paths and measures 91.07 miles using eight DEM connectors; all remain evaluation models rather than general trail-distance providers. Applying the exact optimizer to a 53-peak Valhalla+DEM matrix proves a 17-peak, 97.29-mile maximum at a 100-mile budget; an 18th peak requires 102.99 miles within that matrix. Charging nearest-OSM-trailhead approaches and returns inside the same budget proves a 15-peak, 90.13-mile optimum from Denny Creek Trailhead to Upper Blue Lakes Trailhead, with geometry touching every exact summit coordinate. Anchoring all 91 standard Nolan pairs with cumulative known-GPX distances proves a 14-peak, 96.43-mile maximum; the winning route is the standard 14 summits in standard order with 13 GPX-backed summit legs and two DEM trailhead approaches. The same model proves 8 peaks at 47.66 miles under a 50-mile budget and 5 peaks at 17.02 miles under a 25-mile budget.

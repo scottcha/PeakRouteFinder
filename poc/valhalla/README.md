@@ -199,3 +199,20 @@ This replaces both directions of all **91 standard summit pairs** with cumulativ
 The optimal order is **Mount Shavano Trailhead → Shavano → Tabeguache → Antero → Princeton → Yale → Columbia → Harvard → Oxford → Belford → Missouri → Huron → La Plata → Elbert → Massive → North Halfmoon Lakes Trailhead**. These are exactly the standard 14 Nolan's summits in standard order. All 13 summit-to-summit legs use the known GPX and total 89.638460 miles. The only non-GPX legs are Mount Shavano Trailhead→Shavano (3.606354 miles) and Massive→North Halfmoon Lakes Trailhead (3.188476 miles). All 30 leg endpoints exactly equal their summit or trailhead coordinates.
 
 The 14-peak bound is exact for this all-pairs anchored matrix. Unlike the adjacent-only result, no unanchored summit-to-summit connector remains in the winning route. Real-world feasibility of the two nearest-trailhead approaches still depends on the DEM model and OSM trailhead tagging.
+
+### 50-mile and 25-mile routes
+
+The same all-pairs anchored model produces these exact maxima. Both solves proved that one additional peak cannot fit the budget.
+
+| Budget | Proven maximum peaks | Cheapest maximum-count route | GPX legs | DEM legs |
+|---:|---:|---:|---:|---:|
+| 50 mi | **8** | **47.662510 mi** | 7 | 2 |
+| 25 mi | **5** | **17.015701 mi** | 0 | 6 |
+
+![Eight-peak route optimized for a 50-mile budget](optimal-50-gpx-continuous.png)
+
+![Five-peak route optimized for a 25-mile budget](optimal-25-gpx-continuous.png)
+
+The 50-mile route is **Mount Elbert Trailhead → La Plata → Huron → Missouri → Belford → Oxford → Harvard → Columbia → Yale → Denny Creek Trailhead**. Its seven summit-to-summit legs use the known GPX; only the two approaches use DEM.
+
+The 25-mile route is **Willow Creek Trailhead → Crestone Peak → Crestone Needle → Humboldt Peak → Kit Carson Mountain → Challenger Point → Willow Creek Trailhead**. It has 12 exact leg endpoints, but all six legs are DEM-based because the Crestone group is outside the standard Nolan GPX. Its mileage is therefore an exact matrix optimum, not a known-GPX-validated field route.
