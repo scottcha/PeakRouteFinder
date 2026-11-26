@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_b2bcdf5be2fbbaf7591593333af18d68 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+    <div id="route-key" style="position:fixed;top:12px;right:12px;z-index:9999;
+                width:240px;max-height:calc(100vh - 48px);overflow-y:auto;background:white;
+                border:1px solid #d1d5db;border-radius:4px;padding:10px;
+                font:13px sans-serif;box-shadow:0 1px 4px #0003">
+      <strong>Proven optimal: 20 peaks, 97.84 miles</strong>
+      <p style="margin:8px 0 4px"><strong>Route peaks (in order)</strong></p>
+      <ol style="margin:0;padding-left:24px"><li value="1">Mount Shavano</li><li value="2">Tabeguache Peak</li><li value="3">Mount Antero</li><li value="4">Mount Princeton</li><li value="5">Mount Yale</li><li value="6">Mount Columbia</li><li value="7">Mount Harvard</li><li value="8">Mount Oxford</li><li value="9">Mount Belford</li><li value="10">Missouri Mountain</li><li value="11">Huron Peak</li><li value="12">La Plata Peak</li><li value="13">Mount Elbert</li><li value="14">Mount Sherman</li><li value="15">Mount Democrat</li><li value="16">Mount Bross</li><li value="17">Mount Lincoln</li><li value="18">Quandary Peak</li><li value="19">Grays Peak</li><li value="20">Torreys Peak</li></ol>
+      <details style="margin-top:8px">
+        <summary style="color:#6b7280">Other listed peaks (33)</summary>
+        <ul style="margin:4px 0;padding-left:24px"><li>Mount Massive</li><li>Blanca Peak</li><li>Uncompahgre Peak</li><li>Crestone Peak</li><li>Castle Peak</li><li>Mount Blue Sky</li><li>Longs Peak</li><li>Mount Wilson</li><li>Crestone Needle</li><li>Kit Carson Mountain</li><li>Maroon Peak</li><li>Mount Sneffels</li><li>Capitol Peak</li><li>Pikes Peak</li><li>Snowmass Mountain</li><li>Windom Peak</li><li>Mount Eolus</li><li>Challenger Point</li><li>Humboldt Peak</li><li>Mount Bierstadt</li><li>Sunlight Peak</li><li>Handies Peak</li><li>Culebra Peak</li><li>Ellingwood Point</li><li>Mount Lindsey</li><li>Little Bear Peak</li><li>Redcloud Peak</li><li>Pyramid Peak</li><li>Wilson Peak</li><li>San Luis Peak</li><li>Wetterhorn Peak</li><li>Mount of the Holy Cross</li><li>Sunshine Peak</li></ul>
+      </details>
+      <div style="margin-top:8px">
+        <span style="color:#15803d">●</span> Start
+        &nbsp; <span style="color:#b91c1c">●</span> End
+      </div>
+    </div>
+    
+    
+            <div class="folium-map" id="map_b2bcdf5be2fbbaf7591593333af18d68" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_b2bcdf5be2fbbaf7591593333af18d68 = L.map(
+                "map_b2bcdf5be2fbbaf7591593333af18d68",
+                {
+                    center: [38.591398113207546, -106.42201698113207],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 7,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+            L.control.scale().addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+
+            
+
+        
+    
+            var tile_layer_3c8a950a8aaa93163c2e5fdfa897eddb = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Tiles \u0026copy; Esri \u0026mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_3c8a950a8aaa93163c2e5fdfa897eddb.addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var poly_line_517e58ee59e48007b871bae1861eafb3 = L.polyline(
+                [[38.6192, -106.2393], [38.6255, -106.2509], [38.6741, -106.2462], [38.7492, -106.2424], [38.8442, -106.3138], [38.9039, -106.2975], [38.9244, -106.3207], [38.9648, -106.3388], [38.9607, -106.3607], [38.9476, -106.3785], [38.9455, -106.4381], [39.0294, -106.4729], [39.1178, -106.4454], [39.225, -106.1699], [39.3396, -106.14], [39.3354, -106.1077], [39.3515, -106.1116], [39.3973, -106.1064], [39.6339, -105.8176], [39.6428, -105.8212]],
+                {"bubblingMouseEvents": true, "color": "#1769aa", "dashArray": null, "dashOffset": null, "fill": false, "fillColor": "#1769aa", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 4}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            poly_line_517e58ee59e48007b871bae1861eafb3.bindTooltip(
+                `<div>
+                     20 peaks, 97.84 miles
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_fe5651623932469a406887ae240e5fce = L.marker(
+                [39.1178, -106.4454],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_d3f38b3db5a5c9fecf2c06f2d15ec9b6 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e13. Mount Elbert\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_fe5651623932469a406887ae240e5fce.bindTooltip(
+                `<div>
+                     Mount Elbert (39.11780, -106.44540)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fe5651623932469a406887ae240e5fce.setIcon(div_icon_d3f38b3db5a5c9fecf2c06f2d15ec9b6);
+            
+    
+            var circle_marker_24ea15283d6a2295b255d0342ee9064c = L.circleMarker(
+                [39.1875, -106.4757],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_24ea15283d6a2295b255d0342ee9064c.bindTooltip(
+                `<div>
+                     Mount Massive (39.18750, -106.47570)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_6af7ceab9e84dacaa30d2500a699fae8 = L.marker(
+                [38.9244, -106.3207],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_2e435147cfb55547af5b4343feaf5827 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e7. Mount Harvard\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_6af7ceab9e84dacaa30d2500a699fae8.bindTooltip(
+                `<div>
+                     Mount Harvard (38.92440, -106.32070)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6af7ceab9e84dacaa30d2500a699fae8.setIcon(div_icon_2e435147cfb55547af5b4343feaf5827);
+            
+    
+            var circle_marker_94ba9ce4db9eed37ebb752ed782c7fbb = L.circleMarker(
+                [37.5775, -105.4856],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_94ba9ce4db9eed37ebb752ed782c7fbb.bindTooltip(
+                `<div>
+                     Blanca Peak (37.57750, -105.48560)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_04f3215e9e867344602a8bb3289922c1 = L.marker(
+                [39.0294, -106.4729],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_196acb3a5187f81925f1ebf14426ad9e = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e12. La Plata Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_04f3215e9e867344602a8bb3289922c1.bindTooltip(
+                `<div>
+                     La Plata Peak (39.02940, -106.47290)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_04f3215e9e867344602a8bb3289922c1.setIcon(div_icon_196acb3a5187f81925f1ebf14426ad9e);
+            
+    
+            var circle_marker_1358f026d9e7b664e38a2db72970e6e4 = L.circleMarker(
+                [38.0717, -107.4621],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_1358f026d9e7b664e38a2db72970e6e4.bindTooltip(
+                `<div>
+                     Uncompahgre Peak (38.07170, -107.46210)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0a8cecfedca1f680bfffbd850d1a1e9c = L.circleMarker(
+                [37.9669, -105.5855],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_0a8cecfedca1f680bfffbd850d1a1e9c.bindTooltip(
+                `<div>
+                     Crestone Peak (37.96690, -105.58550)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_9adcf257168ac1b0904c10ac36dc8cf6 = L.marker(
+                [39.3515, -106.1116],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_a800ec39752588fabf22c534a3af1ee6 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e17. Mount Lincoln\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_9adcf257168ac1b0904c10ac36dc8cf6.bindTooltip(
+                `<div>
+                     Mount Lincoln (39.35150, -106.11160)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9adcf257168ac1b0904c10ac36dc8cf6.setIcon(div_icon_a800ec39752588fabf22c534a3af1ee6);
+            
+    
+            var circle_marker_ad9153671fe6a4394c743e56640fe45a = L.circleMarker(
+                [39.0097, -106.8614],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_ad9153671fe6a4394c743e56640fe45a.bindTooltip(
+                `<div>
+                     Castle Peak (39.00970, -106.86140)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_32e722f13d493185f667464ca40be4e7 = L.marker(
+                [39.6339, -105.8176],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_99bd89dd74b18a2d5415bc34cde8e81f = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e19. Grays Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_32e722f13d493185f667464ca40be4e7.bindTooltip(
+                `<div>
+                     Grays Peak (39.63390, -105.81760)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_32e722f13d493185f667464ca40be4e7.setIcon(div_icon_99bd89dd74b18a2d5415bc34cde8e81f);
+            
+    
+            var marker_4b46c6f383031e33368c304a431214c5 = L.marker(
+                [38.6741, -106.2462],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_50167cfea652df657f99a4a530bf36af = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e3. Mount Antero\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_4b46c6f383031e33368c304a431214c5.bindTooltip(
+                `<div>
+                     Mount Antero (38.67410, -106.24620)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_4b46c6f383031e33368c304a431214c5.setIcon(div_icon_50167cfea652df657f99a4a530bf36af);
+            
+    
+            var marker_bd69c32c007d9b853f33580a742e7bc4 = L.marker(
+                [39.6428, -105.8212],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_5b2e998fde0d800d1bcd37341c5e3336 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e20. Torreys Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_bd69c32c007d9b853f33580a742e7bc4.bindTooltip(
+                `<div>
+                     Torreys Peak (39.64280, -105.82120)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_bd69c32c007d9b853f33580a742e7bc4.setIcon(div_icon_5b2e998fde0d800d1bcd37341c5e3336);
+            
+    
+            var marker_c8b5b4b095cbb29680d60e6476667b49 = L.marker(
+                [39.3973, -106.1064],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_93c02f50072bc544f72b6f5f98fa03bc = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e18. Quandary Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_c8b5b4b095cbb29680d60e6476667b49.bindTooltip(
+                `<div>
+                     Quandary Peak (39.39730, -106.10640)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_c8b5b4b095cbb29680d60e6476667b49.setIcon(div_icon_93c02f50072bc544f72b6f5f98fa03bc);
+            
+    
+            var circle_marker_183987570f27d3c8bc51d6c24ca10df8 = L.circleMarker(
+                [39.5883, -105.6438],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_183987570f27d3c8bc51d6c24ca10df8.bindTooltip(
+                `<div>
+                     Mount Blue Sky (39.58830, -105.64380)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_dd9ed626c0095db3d747d5eeadcaa468 = L.circleMarker(
+                [40.255, -105.6151],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_dd9ed626c0095db3d747d5eeadcaa468.bindTooltip(
+                `<div>
+                     Longs Peak (40.25500, -105.61510)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b696678dbf0f395b1c845a2837e89998 = L.circleMarker(
+                [37.8391, -107.9916],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_b696678dbf0f395b1c845a2837e89998.bindTooltip(
+                `<div>
+                     Mount Wilson (37.83910, -107.99160)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_dfa267a2fbc6cdb0bc34cccfcda15652 = L.marker(
+                [38.6192, -106.2393],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_7844c187b2659258d08e572d532822a4 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e1. Mount Shavano\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_dfa267a2fbc6cdb0bc34cccfcda15652.bindTooltip(
+                `<div>
+                     Mount Shavano (38.61920, -106.23930)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_dfa267a2fbc6cdb0bc34cccfcda15652.setIcon(div_icon_7844c187b2659258d08e572d532822a4);
+            
+    
+            var marker_57877964a119ab82a732c80d973a65d1 = L.marker(
+                [38.7492, -106.2424],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_298f395f7c1f531b4c69cb41566cfea5 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e4. Mount Princeton\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_57877964a119ab82a732c80d973a65d1.bindTooltip(
+                `<div>
+                     Mount Princeton (38.74920, -106.24240)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_57877964a119ab82a732c80d973a65d1.setIcon(div_icon_298f395f7c1f531b4c69cb41566cfea5);
+            
+    
+            var marker_b1d603dec125e8d5c50e6856c936c30c = L.marker(
+                [38.9607, -106.3607],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_2cadff23e6e6f7f5739eddbd6d636f9a = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e9. Mount Belford\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_b1d603dec125e8d5c50e6856c936c30c.bindTooltip(
+                `<div>
+                     Mount Belford (38.96070, -106.36070)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_b1d603dec125e8d5c50e6856c936c30c.setIcon(div_icon_2cadff23e6e6f7f5739eddbd6d636f9a);
+            
+    
+            var circle_marker_537034c7afd7ddaebd4b5160358404be = L.circleMarker(
+                [37.9647, -105.5766],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_537034c7afd7ddaebd4b5160358404be.bindTooltip(
+                `<div>
+                     Crestone Needle (37.96470, -105.57660)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_228c87a69c74118a958f0f6a9debf7e4 = L.marker(
+                [38.8442, -106.3138],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_332f5329900177d1634710c5a9d1c99f = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e5. Mount Yale\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_228c87a69c74118a958f0f6a9debf7e4.bindTooltip(
+                `<div>
+                     Mount Yale (38.84420, -106.31380)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_228c87a69c74118a958f0f6a9debf7e4.setIcon(div_icon_332f5329900177d1634710c5a9d1c99f);
+            
+    
+            var marker_2db5a0eb2b9795998a63f8f4c7fddef0 = L.marker(
+                [39.3354, -106.1077],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_932920d1f941f775ca5b2f36d1333e67 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e16. Mount Bross\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_2db5a0eb2b9795998a63f8f4c7fddef0.bindTooltip(
+                `<div>
+                     Mount Bross (39.33540, -106.10770)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_2db5a0eb2b9795998a63f8f4c7fddef0.setIcon(div_icon_932920d1f941f775ca5b2f36d1333e67);
+            
+    
+            var circle_marker_b668e7efe21bfc94f91a6f7c10fe6540 = L.circleMarker(
+                [37.9797, -105.6026],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_b668e7efe21bfc94f91a6f7c10fe6540.bindTooltip(
+                `<div>
+                     Kit Carson Mountain (37.97970, -105.60260)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_ea0d28821ddf87897ab79610957dc6ba = L.circleMarker(
+                [39.0708, -106.989],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_ea0d28821ddf87897ab79610957dc6ba.bindTooltip(
+                `<div>
+                     Maroon Peak (39.07080, -106.98900)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_494d54b69eeb945a6590cd9dc581ef6b = L.marker(
+                [38.6255, -106.2509],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_7285309b8e0192923d3c853cb2f4df70 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e2. Tabeguache Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_494d54b69eeb945a6590cd9dc581ef6b.bindTooltip(
+                `<div>
+                     Tabeguache Peak (38.62550, -106.25090)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_494d54b69eeb945a6590cd9dc581ef6b.setIcon(div_icon_7285309b8e0192923d3c853cb2f4df70);
+            
+    
+            var marker_40f1f5a54a15339b35aa149b996ac94b = L.marker(
+                [38.9648, -106.3388],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_629251d91b30cc3b1d012d6a3163ae33 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e8. Mount Oxford\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_40f1f5a54a15339b35aa149b996ac94b.bindTooltip(
+                `<div>
+                     Mount Oxford (38.96480, -106.33880)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_40f1f5a54a15339b35aa149b996ac94b.setIcon(div_icon_629251d91b30cc3b1d012d6a3163ae33);
+            
+    
+            var circle_marker_e04df2e5b5db811f7dec153d662c792f = L.circleMarker(
+                [38.0038, -107.7923],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_e04df2e5b5db811f7dec153d662c792f.bindTooltip(
+                `<div>
+                     Mount Sneffels (38.00380, -107.79230)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_30de19ad744f874b047a94892dcc2330 = L.marker(
+                [39.3396, -106.14],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_2f6a7c4e1b96d9793267b5d5502acba3 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e15. Mount Democrat\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_30de19ad744f874b047a94892dcc2330.bindTooltip(
+                `<div>
+                     Mount Democrat (39.33960, -106.14000)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_30de19ad744f874b047a94892dcc2330.setIcon(div_icon_2f6a7c4e1b96d9793267b5d5502acba3);
+            
+    
+            var circle_marker_a170fcbee1fbcba27819f203a8eba957 = L.circleMarker(
+                [39.1503, -107.0829],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_a170fcbee1fbcba27819f203a8eba957.bindTooltip(
+                `<div>
+                     Capitol Peak (39.15030, -107.08290)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b53d0ecdb88d7a80c88f6114917a4344 = L.circleMarker(
+                [38.8405, -105.0442],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_b53d0ecdb88d7a80c88f6114917a4344.bindTooltip(
+                `<div>
+                     Pikes Peak (38.84050, -105.04420)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_122049a580ce28d555b3f32cf0311618 = L.circleMarker(
+                [39.1188, -107.0665],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_122049a580ce28d555b3f32cf0311618.bindTooltip(
+                `<div>
+                     Snowmass Mountain (39.11880, -107.06650)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_9039d8267fe26bd00ba265e5e0216997 = L.circleMarker(
+                [37.6212, -107.5919],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_9039d8267fe26bd00ba265e5e0216997.bindTooltip(
+                `<div>
+                     Windom Peak (37.62120, -107.59190)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_00f53aa08c487f929fdac5328e7b5f5a = L.circleMarker(
+                [37.6218, -107.6227],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_00f53aa08c487f929fdac5328e7b5f5a.bindTooltip(
+                `<div>
+                     Mount Eolus (37.62180, -107.62270)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d340a2d691963dc23cfd4cb1f6e2616b = L.circleMarker(
+                [37.9804, -105.6066],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_d340a2d691963dc23cfd4cb1f6e2616b.bindTooltip(
+                `<div>
+                     Challenger Point (37.98040, -105.60660)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_faa02281aa4ba217632f208f5eaae171 = L.marker(
+                [38.9039, -106.2975],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_96b2bbd4ae2c6d25e7acf53d50c325ba = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e6. Mount Columbia\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_faa02281aa4ba217632f208f5eaae171.bindTooltip(
+                `<div>
+                     Mount Columbia (38.90390, -106.29750)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_faa02281aa4ba217632f208f5eaae171.setIcon(div_icon_96b2bbd4ae2c6d25e7acf53d50c325ba);
+            
+    
+            var marker_672c804294fbcfe886952495cb258f2f = L.marker(
+                [38.9476, -106.3785],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_7c7305d0035a54aac7d42992eb0e0567 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e10. Missouri Mountain\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_672c804294fbcfe886952495cb258f2f.bindTooltip(
+                `<div>
+                     Missouri Mountain (38.94760, -106.37850)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_672c804294fbcfe886952495cb258f2f.setIcon(div_icon_7c7305d0035a54aac7d42992eb0e0567);
+            
+    
+            var circle_marker_a1381d545de7b177648c59148dff856f = L.circleMarker(
+                [37.9762, -105.5552],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_a1381d545de7b177648c59148dff856f.bindTooltip(
+                `<div>
+                     Humboldt Peak (37.97620, -105.55520)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3634ff5be5761a92f2d1c68f23228602 = L.circleMarker(
+                [39.5826, -105.6688],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_3634ff5be5761a92f2d1c68f23228602.bindTooltip(
+                `<div>
+                     Mount Bierstadt (39.58260, -105.66880)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_3533290fb0c5a9a4713ee2a1d7cfd03c = L.circleMarker(
+                [37.6274, -107.5959],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_3533290fb0c5a9a4713ee2a1d7cfd03c.bindTooltip(
+                `<div>
+                     Sunlight Peak (37.62740, -107.59590)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_19e552b6494c3b830847fe33961a0c87 = L.circleMarker(
+                [37.913, -107.5044],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_19e552b6494c3b830847fe33961a0c87.bindTooltip(
+                `<div>
+                     Handies Peak (37.91300, -107.50440)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_6505aa0e4168988c69341b17ee0f2f7a = L.circleMarker(
+                [37.1224, -105.1858],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_6505aa0e4168988c69341b17ee0f2f7a.bindTooltip(
+                `<div>
+                     Culebra Peak (37.12240, -105.18580)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_2a7c19f228020aaad216dd900882e815 = L.circleMarker(
+                [37.5826, -105.4927],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_2a7c19f228020aaad216dd900882e815.bindTooltip(
+                `<div>
+                     Ellingwood Point (37.58260, -105.49270)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_6cc4c171850272a51ae8b3371053cbed = L.circleMarker(
+                [37.5837, -105.4449],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_6cc4c171850272a51ae8b3371053cbed.bindTooltip(
+                `<div>
+                     Mount Lindsey (37.58370, -105.44490)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_c11f1a50dc4570ba5b4e5ac7f4e65f49 = L.circleMarker(
+                [37.5666, -105.4972],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_c11f1a50dc4570ba5b4e5ac7f4e65f49.bindTooltip(
+                `<div>
+                     Little Bear Peak (37.56660, -105.49720)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_e93f8ce9be78c05fd7d0c5d5af2514ac = L.marker(
+                [39.225, -106.1699],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_1a10f1440552af91fb4871cbb97bfe13 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e14. Mount Sherman\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_e93f8ce9be78c05fd7d0c5d5af2514ac.bindTooltip(
+                `<div>
+                     Mount Sherman (39.22500, -106.16990)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e93f8ce9be78c05fd7d0c5d5af2514ac.setIcon(div_icon_1a10f1440552af91fb4871cbb97bfe13);
+            
+    
+            var circle_marker_40571698f9667f48807961de56f5d81c = L.circleMarker(
+                [37.941, -107.4219],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_40571698f9667f48807961de56f5d81c.bindTooltip(
+                `<div>
+                     Redcloud Peak (37.94100, -107.42190)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_74183ef9c6ad276f48b0a48be1cf666e = L.circleMarker(
+                [39.0717, -106.9502],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_74183ef9c6ad276f48b0a48be1cf666e.bindTooltip(
+                `<div>
+                     Pyramid Peak (39.07170, -106.95020)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_e755641e1dfdc8785b44195593137f5c = L.circleMarker(
+                [37.8603, -107.9847],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_e755641e1dfdc8785b44195593137f5c.bindTooltip(
+                `<div>
+                     Wilson Peak (37.86030, -107.98470)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_9a4c7ee15f7ba0206f55b6449aa1a8ac = L.circleMarker(
+                [37.9868, -106.9313],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_9a4c7ee15f7ba0206f55b6449aa1a8ac.bindTooltip(
+                `<div>
+                     San Luis Peak (37.98680, -106.93130)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1b63e566d6c208fd8e636c21f7358aa0 = L.circleMarker(
+                [38.0607, -107.5109],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_1b63e566d6c208fd8e636c21f7358aa0.bindTooltip(
+                `<div>
+                     Wetterhorn Peak (38.06070, -107.51090)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d80d95377f7176e55701401d14c5fdd8 = L.circleMarker(
+                [39.4668, -106.4817],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_d80d95377f7176e55701401d14c5fdd8.bindTooltip(
+                `<div>
+                     Mount of the Holy Cross (39.46680, -106.48170)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_f33e2cf6bbd97a6019329874c8d2656d = L.marker(
+                [38.9455, -106.4381],
+                {
+}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            var div_icon_30ed48b037b37508ac4637159c6b4613 = L.divIcon({
+  "html": "\u003cdiv style=\"display:inline-block;width:max-content;white-space:nowrap;background:#ffffffde;color:#1769aa;border-left:3px solid #1769aa;padding:2px 5px;font:bold 12px/18px sans-serif;\"\u003e11. Huron Peak\u003c/div\u003e",
+  "iconAnchor": [-6, 12],
+  "className": "peak-name-label",
+});
+        
+    
+            marker_f33e2cf6bbd97a6019329874c8d2656d.bindTooltip(
+                `<div>
+                     Huron Peak (38.94550, -106.43810)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_f33e2cf6bbd97a6019329874c8d2656d.setIcon(div_icon_30ed48b037b37508ac4637159c6b4613);
+            
+    
+            var circle_marker_eff7ca26803b82a8f13f46a18b9f4f66 = L.circleMarker(
+                [37.9228, -107.4256],
+                {"bubblingMouseEvents": true, "color": "#6b7280", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#6b7280", "fillOpacity": 0.65, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 3}
+            ).addTo(map_b2bcdf5be2fbbaf7591593333af18d68);
+        
+    
+            circle_marker_eff7ca26803b82a8f13f46a18b9f4f66.bindTooltip(
+                `<div>
+                     Sunshine Peak (37.92280, -107.42560)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            map_b2bcdf5be2fbbaf7591593333af18d68.fitBounds(
+                [[37.1224, -107.9916], [40.255, -105.0442]],
+                {"maxZoom": 14, "paddingBottomRight": [280, 30], "paddingTopLeft": [30, 30]}
+            );
+        
+</script>
+</html>

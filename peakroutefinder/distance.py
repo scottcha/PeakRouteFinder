@@ -9,6 +9,19 @@ from peakroutefinder.model import Peak
 EARTH_RADIUS_MILES = 3958.7613
 
 
+def haversine_miles(
+    origin: tuple[float, float], destination: tuple[float, float]
+) -> float:
+    """Return great-circle miles between two latitude/longitude pairs."""
+    lat1, lon1 = (math.radians(value) for value in origin)
+    lat2, lon2 = (math.radians(value) for value in destination)
+    haversine = (
+        math.sin((lat2 - lat1) / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
+    )
+    return 2 * EARTH_RADIUS_MILES * math.asin(math.sqrt(haversine))
+
+
 class DistanceProvider(Protocol):
     """Supply pairwise distances in miles for an ordered set of points."""
 

@@ -57,7 +57,7 @@ def build_circuit_model(
     start_index: int | None,
     end_index: int | None,
 ) -> CircuitModel:
-    """Build one circuit in which self-loops skip nodes and depot arcs are free."""
+    """Build one circuit with skip loops and caller-supplied terminal costs."""
     depot = len(distances) - 1
     model = cp_model.CpModel()
     arcs: dict[tuple[int, int], cp_model.IntVar] = {}
@@ -72,7 +72,7 @@ def build_circuit_model(
         arcs[tail, head] * distances[tail][head]
         for tail in range(len(distances))
         for head in range(len(distances))
-        if tail != head and tail != depot and head != depot
+        if tail != head
     )
     model.Add(cost <= budget_units)
     model.Add(arcs[depot, depot] == 0)
