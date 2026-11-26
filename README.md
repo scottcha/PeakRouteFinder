@@ -86,7 +86,7 @@ The routing POC keeps exact search separate from distance acquisition so CP-SAT 
 |---|---|
 | CP-SAT circuit model | Uses OR-Tools' C++ branch-and-cut engine instead of exponential DFS enumeration. Self-loop arcs skip unvisited peaks and one circuit represents the selected route. |
 | Precomputed distance matrix | Builds the 53-peak matrix once, then solves without network, GPX, or DEM calls. |
-| Selective DEM routing | Runs DEM A* only for 202 of 2,756 directed peak pairs within the 15-mile haversine cutoff; Valhalla handles the other candidates. |
+| Selective DEM routing | Attempts DEM A* for 202 of 2,756 directed peak pairs within the 15-mile haversine cutoff; 190 routed successfully, and Valhalla handles the remaining candidates. |
 | Two-phase objective | First proves the maximum peak count, then fixes that count and minimizes mileage. This avoids weighted-objective tradeoffs. |
 | Precomputed terminal connectors | Calculates 106 directed trailhead candidates and charges only the selected start/end connectors on CP-SAT's depot arcs. |
 | GPX anchoring | Precomputes cumulative distance and continuous geometry for all 91 standard Nolan pairs in both directions. |
