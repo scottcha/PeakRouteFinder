@@ -79,6 +79,7 @@ Verified examples with OR-Tools 9.15.6755:
 | Instance | Budget | Peaks | Miles | Result |
 |---|---:|---:|---:|---|
 | Colorado 53 | 100 mi | 20 | 97.84 | Proven optimal |
+| Colorado top 100 | 100 mi | 35 | 97.02 | Proven optimal |
 | Colorado 53, start and end | 100 mi | 16 | 92.32 | Proven optimal |
 | Washington top 100 | 60 mi | 27 | 57.50 | Proven optimal |
 
